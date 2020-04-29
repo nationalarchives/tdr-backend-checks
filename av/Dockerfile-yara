@@ -1,0 +1,9 @@
+FROM alpine
+ARG YARA_VERSION
+RUN apk update && apk add git openssl-dev build-base libc-dev file-dev automake autoconf libtool bison flex && \
+            git clone --recursive --branch v$YARA_VERSION https://github.com/VirusTotal/yara.git && \
+            cd yara && \
+            ./bootstrap.sh && \
+            ./configure && \
+            make && \
+            make install

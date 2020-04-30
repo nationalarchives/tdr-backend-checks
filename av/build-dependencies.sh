@@ -6,7 +6,7 @@ yum install -y autoconf automake bzip2-devel gcc64 gcc64-c++ libarchive-devel li
             wget make gcc-c++ xz libpng-devel
 
 # Compile YARA
-YARA_VERSION = $1
+YARA_VERSION=$1
 wget https://github.com/VirusTotal/yara/archive/v$YARA_VERSION.tar.gz
 tar -xzf v$YARA_VERSION.tar.gz
 cd yara-$YARA_VERSION

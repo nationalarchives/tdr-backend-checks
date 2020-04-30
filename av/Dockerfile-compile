@@ -1,9 +1,10 @@
 ARG ACCOUNT_NUMBER
-FROM $ACCOUNT_NUMBER.dkr.ecr.eu-west-2.amazonaws.com/yara:latest
+ARG STAGE
+FROM $ACCOUNT_NUMBER.dkr.ecr.eu-west-2.amazonaws.com/yara:$STAGE
 WORKDIR /rules
 COPY rule-sources /rules/rule-sources
 COPY compile.py /rules/compile.py
-RUN apk update && apk add git python3-dev && \
+RUN apt-get -y update && apt-get -y install python3-dev python3-pip && \
             pip3 install yara-python && \
             cat rule-sources | xargs -n1 git clone && \
             ./compile.py

@@ -1,26 +1,27 @@
 This is the code and configuration to carry out the antivirus checks on a single file from S3
 
 There will be a task to automatically build the virus definitions into the lambda but for now it's a manual process.
-First, set $MANAGEMENT_ACCOUNT and $YARA_VERSION. Current version as I write this is 3.11.0
+First, set $MANAGEMENT_ACCOUNT, STAGE and $YARA_VERSION. Current version as I write this is 4.0.0
 ```
 export MANAGEMENT_ACCOUNT=managementaccount
-export YARA_VERSION=$YARA_VERSION
+export YARA_VERSION=4.0.0
+export STAGE=intg
 ```
 
 Build the base yara image
-`docker build -f Dockerfile-yara --build-arg YARA_VERSION=$YARA_VERSION -t $MANAGEMENT_ACCOUNT.dkr.ecr.eu-west-2.amazonaws.com/yara .`
+`docker build -f Dockerfile-yara --build-arg YARA_VERSION=$YARA_VERSION -t $MANAGEMENT_ACCOUNT.dkr.ecr.eu-west-2.amazonaws.com/yara:$STAGE .`
 
 Build the dependencies image
 
-`docker build -f Dockerfile-dependencies --build-arg YARA_VERSION=$YARA_VERSION -t $MANAGEMENT_ACCOUNT.dkr.ecr.eu-west-2.amazonaws.com/yara-dependencies .`
+`docker build -f Dockerfile-dependencies --build-arg YARA_VERSION=$YARA_VERSION -t $MANAGEMENT_ACCOUNT.dkr.ecr.eu-west-2.amazonaws.com/yara-dependencies:$STAGE .`
 
 Build the rules file container
 
-`docker build -f Dockerfile-compile -t yara-rules --build-arg ACCOUNT_NUMBER=$MANAGEMENT_ACCOUNT .`
+`docker build -f Dockerfile-compile -t yara-rules --build-arg STAGE=$STAGE --build-arg ACCOUNT_NUMBER=$MANAGEMENT_ACCOUNT .`
 
 Run the dependencies container
 
-`docker run -itd --rm --name dependencies $MANAGEMENT_ACCOUNT.dkr.ecr.eu-west-2.amazonaws.com/yara-dependencies`
+`docker run -itd --rm --name dependencies $MANAGEMENT_ACCOUNT.dkr.ecr.eu-west-2.amazonaws.com/yara-dependencies:$STAGE`
 
 Copy the dependencies zip locally
 
@@ -36,7 +37,7 @@ Make a lambda directory
 
 Copy the rules file into the lambda directory
 
-`docker cp rules:/output ./lambda`
+`docker cp rules:/rules/output ./lambda`
 
 Unzip the dependencies into the lambda directory
 

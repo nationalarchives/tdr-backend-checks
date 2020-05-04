@@ -1,3 +1,4 @@
 .idea
 av/venv
 av/output
+__pycache__

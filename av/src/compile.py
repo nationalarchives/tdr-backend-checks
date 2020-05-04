@@ -2,7 +2,7 @@
 import yara
 import os
 
-RULES_DIR = "."
+RULES_DIR = ".."
 
 
 def get_rules_files():
@@ -12,10 +12,11 @@ def get_rules_files():
             if lower_filename.endswith('.yar') or lower_filename.endswith('.yara'):
                 yield os.path.relpath(os.path.join(root, filename), start=RULES_DIR)
 
+
 def can_file_compile(file_path):
     try:
         yara.compile(file_path)
-        return True 
+        return True
     except yara.SyntaxError:
         return False
 

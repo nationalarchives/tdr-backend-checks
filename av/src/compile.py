@@ -21,9 +21,13 @@ def can_file_compile(file_path):
         return False
 
 
-yara_rules = get_rules_files()
-rules_files = {relative_path: os.path.join(RULES_DIR, relative_path)
-               for relative_path in yara_rules if can_file_compile(os.path.join(RULES_DIR, relative_path))}
-rules = yara.compile(filepaths=rules_files,
-                     externals={'extension': '', 'filename': '', 'filepath': '', 'filetype': ''})
-rules.save("./output")
+def create_output():
+    yara_rules = get_rules_files()
+    rules_files = {relative_path: os.path.join(RULES_DIR, relative_path)
+                   for relative_path in yara_rules if can_file_compile(os.path.join(RULES_DIR, relative_path))}
+    rules = yara.compile(filepaths=rules_files,
+                         externals={'extension': '', 'filename': '', 'filepath': '', 'filetype': ''})
+    rules.save("./output")
+
+
+create_output()

@@ -3,7 +3,6 @@ import pytest
 from moto import mock_s3, mock_sqs
 import os
 from src import matcher
-from src import version
 import yara
 
 
@@ -84,6 +83,7 @@ def get_records(bucket, key, num=1):
 
 def test_load_is_called(s3, sqs, mocker):
     os.environ["ENVIRONMENT"] = "intg"
+    os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
     os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     sqs.create_queue(QueueName="tdr-api-update-intg")
     s3.create_bucket(Bucket='testbucket')
@@ -97,6 +97,7 @@ def test_load_is_called(s3, sqs, mocker):
 
 def test_correct_output(s3, sqs, mocker):
     os.environ["ENVIRONMENT"] = "intg"
+    os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
     os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     sqs.create_queue(QueueName="tdr-api-update-intg")
     s3.create_bucket(Bucket='testbucket')
@@ -108,11 +109,12 @@ def test_correct_output(s3, sqs, mocker):
 
     assert res[0]["software"] == "yara"
     assert res[0]["softwareVersion"] == yara.__version__
-    assert res[0]["databaseVersion"] == version.version
+    assert res[0]["databaseVersion"] == "1"
 
 
 def test_match_found(s3, sqs, mocker):
     os.environ["ENVIRONMENT"] = "intg"
+    os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
     os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     sqs.create_queue(QueueName="tdr-api-update-intg")
     s3.create_bucket(Bucket='testbucket')
@@ -128,6 +130,7 @@ def test_match_found(s3, sqs, mocker):
 
 def test_no_match_found(s3, sqs, mocker):
     os.environ["ENVIRONMENT"] = "intg"
+    os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
     os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     sqs.create_queue(QueueName="tdr-api-update-intg")
     s3.create_bucket(Bucket='testbucket')
@@ -141,6 +144,7 @@ def test_no_match_found(s3, sqs, mocker):
 
 def test_multiple_match_found(s3, sqs, mocker):
     os.environ["ENVIRONMENT"] = "intg"
+    os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
     os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     sqs.create_queue(QueueName="tdr-api-update-intg")
     s3.create_bucket(Bucket='testbucket')
@@ -154,6 +158,7 @@ def test_multiple_match_found(s3, sqs, mocker):
 
 def test_multiple_records(s3, sqs, mocker):
     os.environ["ENVIRONMENT"] = "intg"
+    os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
     os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     sqs.create_queue(QueueName="tdr-api-update-intg")
     s3.create_bucket(Bucket='testbucket')
@@ -171,6 +176,7 @@ def test_multiple_records(s3, sqs, mocker):
 def test_bucket_not_found(s3, sqs, mocker):
     with pytest.raises(s3.meta.client.exceptions.NoSuchBucket):
         os.environ["ENVIRONMENT"] = "intg"
+        os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
         os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
         sqs.create_queue(QueueName="tdr-api-update-intg")
         s3.create_bucket(Bucket='testbucket')
@@ -184,6 +190,7 @@ def test_bucket_not_found(s3, sqs, mocker):
 def test_key_not_found(s3, sqs, mocker):
     with pytest.raises(s3.meta.client.exceptions.NoSuchKey):
         os.environ["ENVIRONMENT"] = "intg"
+        os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
         os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
         sqs.create_queue(QueueName="tdr-api-update-intg")
         s3.create_bucket(Bucket='testbucket')
@@ -197,6 +204,7 @@ def test_key_not_found(s3, sqs, mocker):
 def test_match_fails(s3, sqs, mocker):
     with pytest.raises(yara.Error):
         os.environ["ENVIRONMENT"] = "intg"
+        os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
         os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
         sqs.create_queue(QueueName="tdr-api-update-intg")
         s3.create_bucket(Bucket='testbucket')
@@ -213,6 +221,7 @@ def test_no_records():
 
 def test_output_sent_to_queue(s3, sqs, mocker):
     os.environ["ENVIRONMENT"] = "intg"
+    os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
     queue_url = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     os.environ["SQS_URL"] = queue_url
     sqs.create_queue(QueueName="tdr-api-update-intg")
@@ -229,6 +238,7 @@ def test_output_sent_to_queue(s3, sqs, mocker):
 
 def test_output_sent_to_queue_multiple_records(s3, sqs, mocker):
     os.environ["ENVIRONMENT"] = "intg"
+    os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
     queue_url = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     os.environ["SQS_URL"] = queue_url
     sqs.create_queue(QueueName="tdr-api-update-intg")
@@ -246,6 +256,7 @@ def test_output_sent_to_queue_multiple_records(s3, sqs, mocker):
 
 def test_copy_to_quarantine(s3, sqs, s3_client, mocker):
     os.environ["ENVIRONMENT"] = "intg"
+    os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
     queue_url = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     os.environ["SQS_URL"] = queue_url
     quarantine = 'tdr-upload-files-quarantine-intg'
@@ -263,6 +274,7 @@ def test_copy_to_quarantine(s3, sqs, s3_client, mocker):
 def test_no_copy_to_quarantine_clean(s3, sqs, s3_client, mocker):
     with pytest.raises(s3.meta.client.exceptions.NoSuchKey):
         os.environ["ENVIRONMENT"] = "intg"
+        os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
         queue_url = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
         os.environ["SQS_URL"] = queue_url
         quarantine = 'tdr-upload-files-quarantine-intg'
@@ -279,6 +291,7 @@ def test_no_copy_to_quarantine_clean(s3, sqs, s3_client, mocker):
 
 def test_copy_to_clean_bucket(s3, sqs, s3_client, mocker):
     os.environ["ENVIRONMENT"] = "intg"
+    os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
     queue_url = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     os.environ["SQS_URL"] = queue_url
     clean = 'tdr-upload-files-intg'
@@ -296,6 +309,7 @@ def test_copy_to_clean_bucket(s3, sqs, s3_client, mocker):
 def test_no_copy_to_clean_with_match(s3, sqs, s3_client, mocker):
     with pytest.raises(s3.meta.client.exceptions.NoSuchKey):
         os.environ["ENVIRONMENT"] = "intg"
+        os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
         queue_url = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
         os.environ["SQS_URL"] = queue_url
         clean = 'tdr-upload-files-intg'

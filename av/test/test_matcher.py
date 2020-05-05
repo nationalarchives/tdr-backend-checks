@@ -23,6 +23,12 @@ def s3(aws_credentials):
 
 
 @pytest.fixture(scope='function')
+def s3_client(aws_credentials):
+    with mock_s3():
+        yield boto3.client('s3', region_name='eu-west-2')
+
+
+@pytest.fixture(scope='function')
 def sqs(aws_credentials):
     with mock_sqs():
         yield boto3.client('sqs', region_name='eu-west-2')
@@ -81,6 +87,7 @@ def test_load_is_called(s3, sqs, mocker):
     os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     sqs.create_queue(QueueName="tdr-api-update-intg")
     s3.create_bucket(Bucket='testbucket')
+    s3.create_bucket(Bucket='tdr-upload-files-quarantine-intg')
     s3.Object("testbucket", "test0").put(Body="test")
     mocker.patch('yara.load')
     yara.load.return_value = MockRulesMatchFound()
@@ -93,6 +100,7 @@ def test_correct_output(s3, sqs, mocker):
     os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     sqs.create_queue(QueueName="tdr-api-update-intg")
     s3.create_bucket(Bucket='testbucket')
+    s3.create_bucket(Bucket='tdr-upload-files-quarantine-intg')
     s3.Object("testbucket", "test0").put(Body="test")
     mocker.patch('yara.load')
     yara.load.return_value = MockRulesMatchFound()
@@ -108,6 +116,7 @@ def test_match_found(s3, sqs, mocker):
     os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     sqs.create_queue(QueueName="tdr-api-update-intg")
     s3.create_bucket(Bucket='testbucket')
+    s3.create_bucket(Bucket='tdr-upload-files-quarantine-intg')
     s3.Object("testbucket", "test0").put(Body="test")
     mocker.patch('yara.load')
 
@@ -122,6 +131,7 @@ def test_no_match_found(s3, sqs, mocker):
     os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     sqs.create_queue(QueueName="tdr-api-update-intg")
     s3.create_bucket(Bucket='testbucket')
+    s3.create_bucket(Bucket='tdr-upload-files-intg')
     s3.Object("testbucket", "test0").put(Body="test")
     mocker.patch('yara.load')
     yara.load.return_value = MockRulesNoMatch()
@@ -134,6 +144,7 @@ def test_multiple_match_found(s3, sqs, mocker):
     os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     sqs.create_queue(QueueName="tdr-api-update-intg")
     s3.create_bucket(Bucket='testbucket')
+    s3.create_bucket(Bucket='tdr-upload-files-quarantine-intg')
     s3.Object("testbucket", "test0").put(Body="test")
     mocker.patch('yara.load')
     yara.load.return_value = MockRulesMultipleMatchFound()
@@ -146,6 +157,7 @@ def test_multiple_records(s3, sqs, mocker):
     os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
     sqs.create_queue(QueueName="tdr-api-update-intg")
     s3.create_bucket(Bucket='testbucket')
+    s3.create_bucket(Bucket='tdr-upload-files-quarantine-intg')
     s3.Object("testbucket", "test0").put(Body="test")
     s3.Object("testbucket", "test1").put(Body="test")
     mocker.patch('yara.load')
@@ -162,6 +174,7 @@ def test_bucket_not_found(s3, sqs, mocker):
         os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
         sqs.create_queue(QueueName="tdr-api-update-intg")
         s3.create_bucket(Bucket='testbucket')
+        s3.create_bucket(Bucket='tdr-upload-files-intg')
         s3.Object("testbucket", "test0").put(Body="test")
         mocker.patch('yara.load')
         yara.load.return_value = MockRulesNoMatch()
@@ -174,6 +187,7 @@ def test_key_not_found(s3, sqs, mocker):
         os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
         sqs.create_queue(QueueName="tdr-api-update-intg")
         s3.create_bucket(Bucket='testbucket')
+        s3.create_bucket(Bucket='tdr-upload-files-intg')
         s3.Object("testbucket", "test0").put(Body="test")
         mocker.patch('yara.load')
         yara.load.return_value = MockRulesNoMatch()
@@ -203,6 +217,7 @@ def test_output_sent_to_queue(s3, sqs, mocker):
     os.environ["SQS_URL"] = queue_url
     sqs.create_queue(QueueName="tdr-api-update-intg")
     s3.create_bucket(Bucket='testbucket')
+    s3.create_bucket(Bucket='tdr-upload-files-quarantine-intg')
     s3.Object("testbucket", "test0").put(Body="test")
     mocker.patch('yara.load')
     yara.load.return_value = MockRulesMatchFound()
@@ -218,12 +233,78 @@ def test_output_sent_to_queue_multiple_records(s3, sqs, mocker):
     os.environ["SQS_URL"] = queue_url
     sqs.create_queue(QueueName="tdr-api-update-intg")
     s3.create_bucket(Bucket='testbucket')
+    s3.create_bucket(Bucket='tdr-upload-files-quarantine-intg')
     s3.Object("testbucket", "test0").put(Body="test")
     s3.Object("testbucket", "test1").put(Body="test")
     mocker.patch('yara.load')
     yara.load.return_value = MockRulesMatchFound()
     matcher.matcher_lambda_handler(get_records("testbucket", "test", 2), None)
-    res = sqs.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=11)
+    res = sqs.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=10)
     messages = res["Messages"]
-    # while "Messages" in res and len(res["Messages"]) > 0:
     assert len(messages) == 2
+
+
+def test_copy_to_quarantine(s3, sqs, s3_client, mocker):
+    os.environ["ENVIRONMENT"] = "intg"
+    queue_url = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
+    os.environ["SQS_URL"] = queue_url
+    quarantine = 'tdr-upload-files-quarantine-intg'
+    sqs.create_queue(QueueName="tdr-api-update-intg")
+    s3.create_bucket(Bucket='testbucket')
+    s3.create_bucket(Bucket=quarantine)
+    s3.Object("testbucket", "test0").put(Body="test")
+    mocker.patch('yara.load')
+    yara.load.return_value = MockRulesMatchFound()
+    matcher.matcher_lambda_handler(get_records("testbucket", "test"), None)
+    res = s3_client.get_object(Bucket=quarantine, Key="test0")
+    assert res["Body"].read() == b"test"
+
+
+def test_no_copy_to_quarantine_clean(s3, sqs, s3_client, mocker):
+    with pytest.raises(s3.meta.client.exceptions.NoSuchKey):
+        os.environ["ENVIRONMENT"] = "intg"
+        queue_url = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
+        os.environ["SQS_URL"] = queue_url
+        quarantine = 'tdr-upload-files-quarantine-intg'
+        sqs.create_queue(QueueName="tdr-api-update-intg")
+        s3.create_bucket(Bucket='testbucket')
+        s3.create_bucket(Bucket=quarantine)
+        s3.create_bucket(Bucket='tdr-upload-files-intg')
+        s3.Object("testbucket", "test0").put(Body="test")
+        mocker.patch('yara.load')
+        yara.load.return_value = MockRulesNoMatch()
+        matcher.matcher_lambda_handler(get_records("testbucket", "test"), None)
+        s3_client.get_object(Bucket=quarantine, Key="test0")
+
+
+def test_copy_to_clean_bucket(s3, sqs, s3_client, mocker):
+    os.environ["ENVIRONMENT"] = "intg"
+    queue_url = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
+    os.environ["SQS_URL"] = queue_url
+    clean = 'tdr-upload-files-intg'
+    sqs.create_queue(QueueName="tdr-api-update-intg")
+    s3.create_bucket(Bucket='testbucket')
+    s3.create_bucket(Bucket=clean)
+    s3.Object("testbucket", "test0").put(Body="test")
+    mocker.patch('yara.load')
+    yara.load.return_value = MockRulesNoMatch()
+    matcher.matcher_lambda_handler(get_records("testbucket", "test"), None)
+    res = s3_client.get_object(Bucket=clean, Key="test0")
+    assert res["Body"].read() == b"test"
+
+
+def test_no_copy_to_clean_with_match(s3, sqs, s3_client, mocker):
+    with pytest.raises(s3.meta.client.exceptions.NoSuchKey):
+        os.environ["ENVIRONMENT"] = "intg"
+        queue_url = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
+        os.environ["SQS_URL"] = queue_url
+        clean = 'tdr-upload-files-intg'
+        sqs.create_queue(QueueName="tdr-api-update-intg")
+        s3.create_bucket(Bucket='testbucket')
+        s3.create_bucket(Bucket='tdr-upload-files-quarantine-intg')
+        s3.create_bucket(Bucket=clean)
+        s3.Object("testbucket", "test0").put(Body="test")
+        mocker.patch('yara.load')
+        yara.load.return_value = MockRulesMatchFound()
+        matcher.matcher_lambda_handler(get_records("testbucket", "test"), None)
+        s3_client.get_object(Bucket=clean, Key="test0")

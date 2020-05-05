@@ -3,3 +3,4 @@ yara-python
 moto
 pytest
 pytest-mock
+pytest-cov

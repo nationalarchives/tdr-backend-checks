@@ -29,7 +29,18 @@ def matcher_lambda_handler(event, lambda_context):
 
             rules = yara.load("output")
             match = rules.match(data=streaming_body.read())
-            result = "\n".join([x.rule for x in match])
+            results = [x.rule for x in match]
+
+            copy_source = {
+                "Bucket": bucket,
+                "Key": key
+            }
+            if len(results) > 0:
+                s3_client.copy(copy_source, "tdr-upload-files-quarantine-" + os.environ["ENVIRONMENT"], key)
+            else:
+                s3_client.copy(copy_source, "tdr-upload-files-" + os.environ["ENVIRONMENT"], key)
+
+            result = "\n".join(results)
             time = datetime.today().strftime("%Y-%m-%d-%H:%M:%S")
             output = {"software": "yara", "softwareVersion": yara.__version__, "databaseVersion": version,
                       "result": result,

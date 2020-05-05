@@ -3,6 +3,7 @@ import pytest
 from moto import mock_s3
 import os
 from src import matcher
+from src import version
 import yara
 
 
@@ -22,7 +23,7 @@ def s3(aws_credentials):
 
 
 class MockMatch:
-    rule = "test"
+    rule = "testmatch"
 
 
 class MockRulesMatchFound:
@@ -30,6 +31,13 @@ class MockRulesMatchFound:
     @staticmethod
     def match(data):
         return [MockMatch()]
+
+
+class MockRulesMultipleMatchFound:
+
+    @staticmethod
+    def match(data):
+        return [MockMatch(), MockMatch()]
 
 
 class MockRulesNoMatch:
@@ -46,14 +54,55 @@ class MockRulesMatchError:
         raise yara.Error()
 
 
+def get_records(bucket, key, num=1):
+    records = []
+    for i in range(num):
+        records.append(
+            {
+                "s3": {
+                    "bucket": {"name": bucket},
+                    "object": {"key": key}
+                }
+            }
+        )
+    return {
+        "Records": records
+    }
+
+
+@mock_s3
+def test_load_is_called(s3, mocker):
+    s3.create_bucket(Bucket='testbucket')
+    s3.Object("testbucket", "test").put(Body="test")
+    mocker.patch('yara.load')
+    yara.load.return_value = MockRulesMatchFound()
+    matcher.matcher_lambda_handler(get_records("testbucket", "test"), None)
+    yara.load.assert_called_once_with("output")
+
+
+@mock_s3
+def test_correct_output(s3, mocker):
+    s3.create_bucket(Bucket='testbucket')
+    s3.Object("testbucket", "test").put(Body="test")
+    mocker.patch('yara.load')
+    yara.load.return_value = MockRulesMatchFound()
+    res = matcher.matcher_lambda_handler(get_records("testbucket", "test"), None)
+
+    assert res[0]["software"] == "yara"
+    assert res[0]["softwareVersion"] == yara.__version__
+    assert res[0]["databaseVersion"] == version.version
+
+
 @mock_s3
 def test_match_found(s3, mocker):
     s3.create_bucket(Bucket='testbucket')
     s3.Object("testbucket", "test").put(Body="test")
     mocker.patch('yara.load')
+
     yara.load.return_value = MockRulesMatchFound()
-    res = matcher.matcher_lambda_handler({"bucketName": "testbucket", "key": "test"}, None)
-    assert res == '{"result": ["test"]}'
+    res = matcher.matcher_lambda_handler(get_records("testbucket", "test"), None)
+
+    assert res[0]["result"] == "testmatch"
 
 
 @mock_s3
@@ -62,8 +111,30 @@ def test_no_match_found(s3, mocker):
     s3.Object("testbucket", "test").put(Body="test")
     mocker.patch('yara.load')
     yara.load.return_value = MockRulesNoMatch()
-    res = matcher.matcher_lambda_handler({"bucketName": "testbucket", "key": "test"}, None)
-    assert res == '{"result": []}'
+    res = matcher.matcher_lambda_handler(get_records("testbucket", "test"), None)
+    assert res[0]["result"] == ""
+
+
+@mock_s3
+def test_multiple_match_found(s3, mocker):
+    s3.create_bucket(Bucket='testbucket')
+    s3.Object("testbucket", "test").put(Body="test")
+    mocker.patch('yara.load')
+    yara.load.return_value = MockRulesMultipleMatchFound()
+    res = matcher.matcher_lambda_handler(get_records("testbucket", "test"), None)
+    assert res[0]["result"] == "testmatch\ntestmatch"
+
+
+@mock_s3
+def test_multiple_records(s3, mocker):
+    s3.create_bucket(Bucket='testbucket')
+    s3.Object("testbucket", "test").put(Body="test")
+    mocker.patch('yara.load')
+    yara.load.return_value = MockRulesMatchFound()
+    res = matcher.matcher_lambda_handler(get_records("testbucket", "test", 2), None)
+    assert len(res) == 2
+    assert res[0]["result"] == "testmatch"
+    assert res[1]["result"] == "testmatch"
 
 
 @mock_s3
@@ -73,7 +144,7 @@ def test_bucket_not_found(s3, mocker):
         s3.Object("testbucket", "test").put(Body="test")
         mocker.patch('yara.load')
         yara.load.return_value = MockRulesNoMatch()
-        matcher.matcher_lambda_handler({"bucketName": "anotherbucket", "key": "another_test"}, None)
+        matcher.matcher_lambda_handler(get_records("anotherbucket", "another_test"), None)
 
 
 @mock_s3
@@ -83,15 +154,7 @@ def test_key_not_found(s3, mocker):
         s3.Object("testbucket", "test").put(Body="test")
         mocker.patch('yara.load')
         yara.load.return_value = MockRulesNoMatch()
-        matcher.matcher_lambda_handler({"bucketName": "testbucket", "key": "another_test"}, None)
-
-
-@mock_s3
-def test_rule_file_not_found(s3, mocker):
-    with pytest.raises(yara.Error):
-        s3.create_bucket(Bucket='testbucket')
-        s3.Object("testbucket", "test").put(Body="test")
-        matcher.matcher_lambda_handler({"bucketName": "testbucket", "key": "test"}, None)
+        matcher.matcher_lambda_handler(get_records("testbucket", "another_test"), None)
 
 
 @mock_s3
@@ -101,4 +164,9 @@ def test_match_fails(s3, mocker):
         s3.Object("testbucket", "test").put(Body="test")
         mocker.patch('yara.load')
         yara.load.return_value = MockRulesMatchError()
-        matcher.matcher_lambda_handler({"bucketName": "testbucket", "key": "test"}, None)
+        matcher.matcher_lambda_handler(get_records("testbucket", "test"), None)
+
+
+def test_no_records():
+    res = matcher.matcher_lambda_handler({}, None)
+    assert res == []

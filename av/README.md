@@ -45,7 +45,7 @@ Unzip the dependencies into the lambda directory
 
 Copy main.py to the lambda directory
 
-`cp main.py ./lambda`
+`cp src/matcher.py ./lambda`
 
 Enter the lambda directory 
 
@@ -61,7 +61,7 @@ Upload to S3
 
 Update the lambda function. You will need credentials for whichever environment you're deploying to
 
-`aws lambda update-function-code --function-name yara-av-intg --s3-bucket tdr-backend-checks --s3-key yara-av.zip` 
+`aws lambda update-function-code --function-name tdr-yara-av-$STAGE --s3-bucket tdr-backend-checks-$STAGE --s3-key yara-av.zip` 
 
 Clean up
 ```

@@ -2,7 +2,6 @@ import yara
 import boto3
 import json
 import logging
-from .version import version
 from datetime import datetime
 import os
 
@@ -42,7 +41,8 @@ def matcher_lambda_handler(event, lambda_context):
 
             result = "\n".join(results)
             time = datetime.today().strftime("%Y-%m-%d-%H:%M:%S")
-            output = {"software": "yara", "softwareVersion": yara.__version__, "databaseVersion": version,
+            output = {"software": "yara", "softwareVersion": yara.__version__,
+                      "databaseVersion": os.environ["AWS_LAMBDA_FUNCTION_VERSION"],
                       "result": result,
                       "datetime": time}
             outputs.append(output)

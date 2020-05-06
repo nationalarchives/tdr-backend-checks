@@ -37,5 +37,5 @@ def test_create_file(mocker):
     os.walk.return_value = [("", "", ["one.yar", "two.yara"])]
     mocker.patch("yara.compile")
     compile.create_output()
-    yara.compile.assert_called_with(filepaths={'av/one.yar': '../av/one.yar', 'av/two.yara': '../av/two.yara'},
+    yara.compile.assert_called_with(filepaths={'one.yar': './one.yar', 'two.yara': './two.yara'},
                                     externals={'extension': '', 'filename': '', 'filepath': '', 'filetype': ''})

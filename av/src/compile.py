@@ -2,7 +2,7 @@
 import yara
 import os
 
-RULES_DIR = ".."
+RULES_DIR = "."
 
 
 def get_rules_files():

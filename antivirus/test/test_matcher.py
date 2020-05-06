@@ -112,6 +112,31 @@ def test_correct_output(s3, sqs, mocker):
     assert res[0]["databaseVersion"] == "1"
 
 
+def test_correct_file_id_provided(s3, sqs, mocker):
+    os.environ["ENVIRONMENT"] = "intg"
+    os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"
+    os.environ["SQS_URL"] = "https://queue.amazonaws.com/123456789012/tdr-api-update-intg"
+    sqs.create_queue(QueueName="tdr-api-update-intg")
+    s3.create_bucket(Bucket='testbucket')
+    s3.create_bucket(Bucket='tdr-upload-files-quarantine-intg')
+    s3.Object("testbucket", "cognitoId/fileId").put(Body="test")
+    mocker.patch('yara.load')
+    yara.load.return_value = MockRulesMatchFound()
+    records = {
+        "Records": [
+            {
+                "s3": {
+                    "bucket": {"name": "testbucket"},
+                    "object": {"key": "cognitoId/fileId"}
+                }
+            }
+        ]
+    }
+    res = matcher.matcher_lambda_handler(records, None)
+
+    assert res[0]["fileId"] == "fileId"
+
+
 def test_match_found(s3, sqs, mocker):
     os.environ["ENVIRONMENT"] = "intg"
     os.environ["AWS_LAMBDA_FUNCTION_VERSION"] = "1"

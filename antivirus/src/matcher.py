@@ -44,7 +44,8 @@ def matcher_lambda_handler(event, lambda_context):
             output = {"software": "yara", "softwareVersion": yara.__version__,
                       "databaseVersion": os.environ["AWS_LAMBDA_FUNCTION_VERSION"],
                       "result": result,
-                      "datetime": time}
+                      "datetime": time,
+                      "fileId": key.split("/")[-1] }
             outputs.append(output)
             logger.info("Key %s processed", key)
 

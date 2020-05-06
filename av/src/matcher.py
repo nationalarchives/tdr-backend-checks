@@ -13,8 +13,8 @@ logger.setLevel(INFO)
 
 
 def matcher_lambda_handler(event, lambda_context):
+    outputs = []
     if "Records" in event:
-        outputs = []
         sqs_client = boto3.client("sqs")
         s3_client = boto3.client("s3")
         for record in event["Records"]:

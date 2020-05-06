@@ -1,0 +1,55 @@
+import yara
+import boto3
+import json
+import logging
+from datetime import datetime
+import os
+
+FORMAT = '%(asctime)-15s %(message)s'
+INFO = 20
+logging.basicConfig(format=FORMAT)
+logger = logging.getLogger('matcher')
+logger.setLevel(INFO)
+
+
+def matcher_lambda_handler(event, lambda_context):
+    outputs = []
+    if "Records" in event:
+        sqs_client = boto3.client("sqs")
+        s3_client = boto3.client("s3")
+        for record in event["Records"]:
+            s3 = record["s3"]
+            bucket = s3["bucket"]["name"]
+            key = s3["object"]["key"]
+            logger.info("Object %s found", key)
+
+            s3_object = s3_client.get_object(Bucket=bucket, Key=key)
+            streaming_body = s3_object["Body"]
+
+            rules = yara.load("output")
+            match = rules.match(data=streaming_body.read())
+            results = [x.rule for x in match]
+
+            copy_source = {
+                "Bucket": bucket,
+                "Key": key
+            }
+            if len(results) > 0:
+                s3_client.copy(copy_source, "tdr-upload-files-quarantine-" + os.environ["ENVIRONMENT"], key)
+            else:
+                s3_client.copy(copy_source, "tdr-upload-files-" + os.environ["ENVIRONMENT"], key)
+
+            result = "\n".join(results)
+            time = datetime.today().strftime("%Y-%m-%d-%H:%M:%S")
+            output = {"software": "yara", "softwareVersion": yara.__version__,
+                      "databaseVersion": os.environ["AWS_LAMBDA_FUNCTION_VERSION"],
+                      "result": result,
+                      "datetime": time}
+            outputs.append(output)
+            logger.info("Key %s processed", key)
+
+            sqs_client.send_message(QueueUrl=os.environ["SQS_URL"], MessageBody=json.dumps(output))
+        return outputs
+    else:
+        logger.info("Message does not contain any records")
+        return []

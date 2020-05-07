@@ -1,0 +1,4 @@
+.idea
+antivirus/venv
+antivirus/output
+__pycache__

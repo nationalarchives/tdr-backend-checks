@@ -1,0 +1,4 @@
+{"data":{"addAntivirusMetadata":[
+  {"fileId": "4e0fd35b-8d6f-4498-b081-f7401ce6b99b", "software": "yara", "value": "some value", "softwareVersion": "0.1", "databaseVersion": "0.1", "result": "some result", "datetime": 1584599020000},
+  {"fileId": "3aa0b9ad-6763-4bb2-ad40-18cdeada1fbf", "software": "yara", "value": "some other value", "softwareVersion": "0.1", "databaseVersion": "0.1", "result": "some other result", "datetime": 1584599020001}
+]}}

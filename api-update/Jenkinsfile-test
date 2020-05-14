@@ -15,9 +15,11 @@ pipeline {
                 }
             }
             steps {
-                sh "sbt test antivirus/assembly"
-                sh "mv antivirus/target/scala-2.13/antivirus-assembly-*.jar antivirus/target/scala-2.13/antivirus.jar"
-                stash includes: "antivirus/target/scala-2.13/antivirus.jar", name: "antivirus-jar"
+                dir("api-update") {
+                    sh "sbt test antivirus/assembly"
+                    sh "mv antivirus/target/scala-2.13/antivirus-assembly-*.jar antivirus/target/scala-2.13/antivirus.jar"
+                    stash includes: "antivirus/target/scala-2.13/antivirus.jar", name: "antivirus-jar"
+                }
             }
         }
         stage('Post-build') {
@@ -33,6 +35,9 @@ pipeline {
             stages {
                 stage('Tag Release') {
                     steps {
+                        sh "git push --set-upstream origin ${env.GIT_LOCAL_BRANCH}"
+                        sh 'git config --global user.email tna-digital-archiving-jenkins@nationalarchives.gov.uk'
+                        sh 'git config --global user.name tna-digital-archiving-jenkins'
                         sh "git tag ${versionTag}"
                         sshagent(['github-jenkins']) {
                             sh("git push origin ${versionTag}")

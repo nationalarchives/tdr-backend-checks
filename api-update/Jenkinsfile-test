@@ -41,17 +41,19 @@ pipeline {
                 }
                 stage('Deploy to integration') {
                     steps {
-                        unstash "antivirus-jar"
-                        sh "cp antivirus/target/scala-2.13/antivirus.jar /"
-                        def accountNumber = getAccountNumberFromStage()
-                        sh "python /upload_to_s3.py ${accountNumber} ${params.STAGE} tdr-backend-checks-${params.STAGE} antivirus.jar /antivirus.jar"
-                        build(
-                                job: "TDR Backend Checks Deploy",
-                                parameters: [
-                                        string(name: "STAGE", value: "intg"),
-                                        string(name: "TO_DEPLOY", value: versionTag)
-                                ],
-                                wait: false)
+                        script {
+                            unstash "antivirus-jar"
+                            sh "cp antivirus/target/scala-2.13/antivirus.jar /"
+                            def accountNumber = getAccountNumberFromStage()
+                            sh "python /upload_to_s3.py ${accountNumber} ${params.STAGE} tdr-backend-checks-${params.STAGE} antivirus.jar /antivirus.jar"
+                            build(
+                                    job: "TDR Backend Checks Deploy",
+                                    parameters: [
+                                            string(name: "STAGE", value: "intg"),
+                                            string(name: "TO_DEPLOY", value: versionTag)
+                                    ],
+                                    wait: false)
+                        }
                     }
                 }
             }

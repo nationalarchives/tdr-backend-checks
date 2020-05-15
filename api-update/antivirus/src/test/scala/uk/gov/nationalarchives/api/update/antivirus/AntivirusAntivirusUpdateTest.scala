@@ -24,7 +24,6 @@ class AntivirusAntivirusUpdateTest extends WiremockTest {
     graphqlOkJson("graphql_valid_av_multiple_response")
     val json = getFunctionInput("function_valid_av_multiple_input")
     new AntivirusUpdate().update(json, new ByteArrayOutputStream())
-    val s = fromResource("json/graphql_valid_av_multiple_expected.json").mkString
     wiremockGraphqlServer.verify(postRequestedFor(urlEqualTo(graphQlPath))
       .withRequestBody(equalToJson(fromResource("json/graphql_valid_av_multiple_expected.json").mkString))
       .withHeader("Authorization", equalTo("Bearer token")))

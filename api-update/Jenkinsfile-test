@@ -30,20 +30,10 @@ pipeline {
                 }
             }
             when {
-                expression { env.BRANCH_NAME == "master"}
+              expression { env.BRANCH_NAME == "master"}
             }
+
             stages {
-                stage('Tag Release') {
-                    steps {
-                        sh "git push --set-upstream origin ${env.GIT_LOCAL_BRANCH}"
-                        sh 'git config --global user.email tna-digital-archiving-jenkins@nationalarchives.gov.uk'
-                        sh 'git config --global user.name tna-digital-archiving-jenkins'
-                        sh "git tag ${versionTag}"
-                        sshagent(['github-jenkins']) {
-                            sh("git push origin ${versionTag}")
-                        }
-                    }
-                }
                 stage('Deploy to integration') {
                     steps {
                         script {

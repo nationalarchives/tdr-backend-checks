@@ -16,7 +16,17 @@ pipeline {
             }
             steps {
                 script {
-                    sh "python3 /deploy_lambda_from_s3.py ${accountNumber} ${params.STAGE} tdr-api-update-antivirus-${params.STAGE} tdr-backend-checks-${params.STAGE} antivirus.jar ${params.TO_DEPLOY}"
+                    def accountNumber = getAccountNumberFromStage()
+                    VERSION_TAG = sh (
+                        script: "python3 /deploy_lambda_from_s3.py ${accountNumber} ${params.STAGE} tdr-api-update-antivirus-${params.STAGE} tdr-backend-checks-${params.STAGE} antivirus.jar",
+                        returnStdout: true
+                    ).trim()
+                    sh 'git config --global user.email tna-digital-archiving-jenkins@nationalarchives.gov.uk'
+                    sh 'git config --global user.name tna-digital-archiving-jenkins'
+                    sh "git tag ${VERSION_TAG}"
+                    sshagent(['github-jenkins']) {
+                        sh("git push origin ${VERSION_TAG}")
+                    }
                 }
             }
         }

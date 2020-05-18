@@ -12,8 +12,6 @@ import scala.io.Source.fromResource
 
 class WiremockTest extends AnyFlatSpec with BeforeAndAfterEach with BeforeAndAfterAll {
 
-  def getFunctionInput(jsonLocation: String) = new java.io.ByteArrayInputStream(fromResource(s"json/$jsonLocation.json").mkString.getBytes(java.nio.charset.StandardCharsets.UTF_8.name))
-
   val wiremockGraphqlServer = new WireMockServer(9001)
   val wiremockAuthServer = new WireMockServer(9002)
 

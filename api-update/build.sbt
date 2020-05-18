@@ -3,8 +3,8 @@ import sbt.Keys.fork
 
 ThisBuild / scalaVersion := "2.13.1"
 ThisBuild / version := "0.1.0-SNAPSHOT"
-ThisBuild / organization := "com.example"
-ThisBuild / organizationName := "example"
+ThisBuild / organization := "uk.gov.nationalarchives"
+ThisBuild / organizationName := "api-update"
 
 
 lazy val root = project

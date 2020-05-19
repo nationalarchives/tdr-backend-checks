@@ -4,6 +4,7 @@ import json
 import logging
 from datetime import datetime
 import os
+import urllib.parse
 
 FORMAT = '%(asctime)-15s %(message)s'
 INFO = 20
@@ -24,9 +25,10 @@ def matcher_lambda_handler(event, lambda_context):
             for s3_record in s3_records:
                 s3 = s3_record["s3"]
                 bucket = s3["bucket"]["name"]
-                key = s3["object"]["key"]
-                logger.info("Object %s found", key)
 
+                key = urllib.parse.unquote(s3["object"]["key"])
+                logger.info("Object %s found", key)
+                logger.info("Bucket " + bucket)
                 s3_object = s3_client.get_object(Bucket=bucket, Key=key)
                 streaming_body = s3_object["Body"]
 

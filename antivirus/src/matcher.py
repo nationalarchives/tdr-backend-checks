@@ -2,7 +2,7 @@ import yara
 import boto3
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 import urllib.parse
 
@@ -46,7 +46,7 @@ def matcher_lambda_handler(event, lambda_context):
                     s3_client.copy(copy_source, "tdr-upload-files-" + os.environ["ENVIRONMENT"], key)
 
                 result = "\n".join(results)
-                time = datetime.today().strftime("%Y-%m-%d-%H:%M:%S")
+                time = int(datetime.today().replace(tzinfo=timezone.utc).timestamp()) * 1000
                 output = {"software": "yara", "softwareVersion": yara.__version__,
                           "databaseVersion": os.environ["AWS_LAMBDA_FUNCTION_VERSION"],
                           "result": result,
@@ -61,5 +61,3 @@ def matcher_lambda_handler(event, lambda_context):
     else:
         logger.info("Message does not contain any records")
         return []
-
-

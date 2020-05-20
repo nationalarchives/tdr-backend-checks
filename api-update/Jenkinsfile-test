@@ -57,7 +57,7 @@ pipeline {
                                     job: "TDR Backend Checks Deploy",
                                     parameters: [
                                             string(name: "STAGE", value: "intg"),
-                                            string(name: "TO_DEPLOY", value: ${VERSION_TAG})
+                                            string(name: "TO_DEPLOY", value: VERSION_TAG)
                                     ],
                                     wait: false)
                         }

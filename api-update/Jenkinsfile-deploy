@@ -16,6 +16,7 @@ pipeline {
             }
             steps {
                 script {
+                    def accountNumber = getAccountNumberFromStage()
                     sh "python /update_event_mapping.py ${accountNumber} ${params.STAGE} tdr-api-update-antivirus-${params.STAGE} ${TO_DEPLOY}"
                 }
             }

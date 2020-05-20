@@ -1,5 +1,5 @@
 ## API Update lambdas
-There will be a separate project for each different file metadata update message as well as a common project for shared code. So for now, this is one for the antivirus, the file format and the checksum. 
+There is a separate project for each different file metadata update message as well as a common project for shared code. 
 
 ### Running the tests 
 This is all from the `api-update` directory

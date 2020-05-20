@@ -57,7 +57,7 @@ Zip the contents
 
 `zip -r9 function.zip .`
 
-Upload to an S3
+Upload to an S3 bucket
 
 `aws s3 cp function.zip s3://tdr-backend-checks-$STAGE/yara-av.zip`
 

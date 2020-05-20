@@ -41,11 +41,23 @@ pipeline {
                             sh "cp antivirus/target/scala-2.13/antivirus.jar /"
                             def accountNumber = getAccountNumberFromStage()
                             sh "python /upload_to_s3.py ${accountNumber} ${params.STAGE} tdr-backend-checks-${params.STAGE} antivirus.jar /antivirus.jar"
+
+                            VERSION_TAG = sh (
+                                    script: "python3 /deploy_lambda_from_s3.py ${accountNumber} ${params.STAGE} tdr-api-update-antivirus-${params.STAGE} tdr-backend-checks-${params.STAGE} antivirus.jar",
+                                    returnStdout: true
+                            ).trim()
+
+                            sh 'git config --global user.email tna-digital-archiving-jenkins@nationalarchives.gov.uk'
+                            sh 'git config --global user.name tna-digital-archiving-jenkins'
+                            sh "git tag v${VERSION_TAG}"
+                            sshagent(['github-jenkins']) {
+                                sh("git push origin v${VERSION_TAG}")
+                            }
                             build(
                                     job: "TDR Backend Checks Deploy",
                                     parameters: [
                                             string(name: "STAGE", value: "intg"),
-                                            string(name: "TO_DEPLOY", value: versionTag)
+                                            string(name: "TO_DEPLOY", value: ${VERSION_TAG})
                                     ],
                                     wait: false)
                         }

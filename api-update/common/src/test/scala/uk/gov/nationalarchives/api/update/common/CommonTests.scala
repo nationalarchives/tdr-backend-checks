@@ -37,7 +37,7 @@ class CommonTests extends WiremockTest with MockitoSugar {
       verify(keycloakUtils).serviceAccountToken(expectedId, expectedSecret)
     }
 
-    "The update method" should "call the graphql api with the correct data" in {
+    "The send method" should "call the graphql api with the correct data" in {
       val apiUpdate = ApiUpdate()
 
       val client = mock[GraphQLClient[Data, Variables]]
@@ -56,7 +56,7 @@ class CommonTests extends WiremockTest with MockitoSugar {
 
     }
 
-    "The method" should "error if the auth server is unavailable" in {
+    "The send method" should "error if the auth server is unavailable" in {
       val client = mock[GraphQLClient[Data, Variables]]
       val document = mock[Document]
       val keycloakUtils = mock[KeycloakUtils]
@@ -73,7 +73,7 @@ class CommonTests extends WiremockTest with MockitoSugar {
 
     }
 
-    "The method" should "error if the graphql server is unavailable" in {
+    "The send method" should "error if the graphql server is unavailable" in {
 
       val client = mock[GraphQLClient[Data, Variables]]
       val document = mock[Document]
@@ -93,7 +93,7 @@ class CommonTests extends WiremockTest with MockitoSugar {
       exception.getMessage should equal("Unexpected response from GraphQL API: Response(Left(Graphql error),503,,List(),List())")
     }
 
-    "The method" should "error if the graphql query returns not authorised errors" in {
+    "The send method" should "error if the graphql query returns not authorised errors" in {
       val client = mock[GraphQLClient[Data, Variables]]
       val document = mock[Document]
       val keycloakUtils = mock[KeycloakUtils]
@@ -114,7 +114,7 @@ class CommonTests extends WiremockTest with MockitoSugar {
       exception.getMessage should equal("Not authorised message")
     }
 
-    "The method" should "error if the graphql query returns a general error" in {
+    "The send method" should "error if the graphql query returns a general error" in {
       val client = mock[GraphQLClient[Data, Variables]]
       val document = mock[Document]
       val keycloakUtils = mock[KeycloakUtils]

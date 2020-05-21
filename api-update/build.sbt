@@ -36,6 +36,18 @@ lazy val antivirus = project
     common % "test->test;compile->compile"
   )
 
+lazy val checksum = project
+  .settings(
+    name := "checksum",
+    commonSettings,
+    assemblySettings,
+    testSettings,
+    libraryDependencies ++= commonDependencies
+  )
+  .dependsOn(
+    common % "test->test;compile->compile"
+  )
+
 lazy val testSettings = Seq(
   fork in Test := true,
   envVars in Test := Map("API_URL" -> "http://localhost:9001/graphql", "AUTH_URL" -> "http://localhost:9002/auth", "CLIENT_ID" -> "id", "CLIENT_SECRET" -> "secret")

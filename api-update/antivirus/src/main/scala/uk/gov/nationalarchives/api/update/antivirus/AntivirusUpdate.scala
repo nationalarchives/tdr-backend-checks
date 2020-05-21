@@ -10,15 +10,17 @@ import uk.gov.nationalarchives.api.update.common.ApiUpdate
 import uk.gov.nationalarchives.tdr.GraphQLClient
 import uk.gov.nationalarchives.tdr.keycloak.KeycloakUtils
 
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
 
 class AntivirusUpdate {
 
-  def update(event: SQSEvent, context: Context): Unit = {
+  def update(event: SQSEvent, context: Context): AddAntivirusMetadata.Data = {
     val antivirusInput: List[AddAntivirusMetadataInput] = event.getRecords.asScala.map(r => r.getBody).flatMap(inputString => {
-      val antivirusInputDecoded = decode[List[AddAntivirusMetadataInput]](inputString.toString)
+      val antivirusInputDecoded = decode[List[AddAntivirusMetadataInput]](inputString)
       antivirusInputDecoded match {
         case Right(avUpdates) => avUpdates
         case Left(e) => throw e
@@ -28,8 +30,8 @@ class AntivirusUpdate {
     val apiUpdate = ApiUpdate()
     val client = new GraphQLClient[AddAntivirusMetadata.Data, AddAntivirusMetadata.Variables](sys.env("API_URL"))
     val keycloakUtils = KeycloakUtils(sys.env("AUTH_URL"))
-    apiUpdate.send(keycloakUtils, client, AddAntivirusMetadata.document, AddAntivirusMetadata.Variables(antivirusInput))
+    Await.result(
+      apiUpdate.send(keycloakUtils, client, AddAntivirusMetadata.document, AddAntivirusMetadata.Variables(antivirusInput)), 20 seconds
+    )
   }
 }
-
-

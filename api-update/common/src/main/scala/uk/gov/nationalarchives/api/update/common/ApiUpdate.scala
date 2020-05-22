@@ -8,12 +8,15 @@ import uk.gov.nationalarchives.tdr.{GraphQLClient, GraphQlResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
+import com.typesafe.config.ConfigFactory
+
 
 class ApiUpdate()(implicit val executionContext: ExecutionContext) {
 
   def send[D, V](keycloakUtils: KeycloakUtils, client: GraphQLClient[D, V], document: Document, variables: V): Future[D] = {
+    val configFactory = ConfigFactory.load
     val queryResult: Future[GraphQlResponse[D]] = for {
-      token <- keycloakUtils.serviceAccountToken(sys.env("CLIENT_ID"), sys.env("CLIENT_SECRET"))
+      token <- keycloakUtils.serviceAccountToken(configFactory.getString("client.id"), configFactory.getString("client.secret"))
       result <- client.getResult(token, document, Option(variables))
     } yield result
 

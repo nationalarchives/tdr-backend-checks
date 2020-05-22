@@ -1,6 +1,7 @@
 package uk.gov.nationalarchives.api.update.common
 
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken
+import com.typesafe.config.ConfigFactory
 import org.mockito.ArgumentMatchers._
 import org.mockito.MockitoSugar
 import org.scalatest.matchers.should.Matchers._
@@ -15,6 +16,7 @@ import uk.gov.nationalarchives.tdr.keycloak.KeycloakUtils
 import uk.gov.nationalarchives.tdr.{GraphQLClient, GraphQlResponse}
 import scala.concurrent.duration._
 
+import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
 class CommonTests extends WiremockTest with MockitoSugar {
@@ -38,8 +40,10 @@ class CommonTests extends WiremockTest with MockitoSugar {
       .thenReturn(Future.successful(GraphQlResponse(Some(Data(TestResponse())), List())))
     apiUpdate.send(keycloakUtils, client, document, Variables()).await()
 
-    val expectedId = sys.env("CLIENT_ID")
-    val expectedSecret = sys.env("CLIENT_SECRET")
+
+    val configFactory = ConfigFactory.load
+    val expectedId = configFactory.getString("client.id")
+    val expectedSecret = configFactory.getString("client.secret")
 
     verify(keycloakUtils).serviceAccountToken(expectedId, expectedSecret)
   }

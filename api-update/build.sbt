@@ -12,7 +12,7 @@ lazy val root = project
   .settings(commonSettings)
   .disablePlugins(AssemblyPlugin)
   .aggregate(
-    common
+    commonRef
   )
 
 lazy val common = project
@@ -24,6 +24,8 @@ lazy val common = project
   )
   .disablePlugins(AssemblyPlugin)
 
+lazy val commonRef = LocalProject("common")
+
 lazy val antivirus = project
   .settings(
     name := "antivirus",
@@ -33,12 +35,13 @@ lazy val antivirus = project
     libraryDependencies ++= commonDependencies
   )
   .dependsOn(
-    common % "test->test;compile->compile"
+    commonRef % "test->test;compile->compile"
   )
+lazy val commonSrc = sourceDirectory.in(commonRef)
 
 lazy val testSettings = Seq(
   fork in Test := true,
-  envVars in Test := Map("API_URL" -> "http://localhost:9001/graphql", "AUTH_URL" -> "http://localhost:9002/auth", "CLIENT_ID" -> "id", "CLIENT_SECRET" -> "secret")
+  javaOptions in Test += s"-Dconfig.file=${commonSrc.value}/test/resources/application.conf"
 )
 
 lazy val assemblySettings = Seq(
@@ -58,12 +61,12 @@ lazy val commonDependencies = Seq(
   circeParser,
   generatedGraphql,
   graphqlClient,
-  lambdaCore,
-  lambdaEvents,
+  lambdaCore % Provided,
+  lambdaEvents % Provided,
   authUtils,
+  typesafe,
   mockito % Test,
   wiremock % Test,
   scalaTest % Test,
   keycloakMock % Test
 )
-

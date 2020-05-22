@@ -29,8 +29,9 @@ pipeline {
                     taskrole "arn:aws:iam::${env.MANAGEMENT_ACCOUNT}:role/TDRJenkinsNodeLambdaRole${params.STAGE.capitalize()}"
                 }
             }
+
             when {
-              expression { env.BRANCH_NAME == "master"}
+                expression { env.BRANCH_NAME == "master"}
             }
 
             stages {
@@ -40,7 +41,8 @@ pipeline {
                             unstash "antivirus-jar"
                             sh "cp antivirus/target/scala-2.13/antivirus.jar /"
                             def accountNumber = getAccountNumberFromStage()
-                            sh "python /upload_to_s3.py ${accountNumber} ${params.STAGE} tdr-backend-checks-${params.STAGE} ${versionTag}/antivirus.jar /antivirus.jar"
+                            // sh "python /upload_to_s3.py ${accountNumber} ${params.STAGE} tdr-backend-code-mgmt ${versionTag}/antivirus.jar /antivirus.jar"
+                            sh "aws s3 cp /antivirus.jar s3://tdr-backend-code-mgmt/${versionTag}/antivirus.jar"
 
                             sh 'git config --global user.email tna-digital-archiving-jenkins@nationalarchives.gov.uk'
                             sh 'git config --global user.name tna-digital-archiving-jenkins'

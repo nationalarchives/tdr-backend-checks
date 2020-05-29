@@ -64,6 +64,7 @@ lazy val commonDependencies = Seq(
   lambdaCore % Provided,
   lambdaEvents % Provided,
   authUtils,
+  sqs,
   typesafe,
   mockito % Test,
   wiremock % Test,

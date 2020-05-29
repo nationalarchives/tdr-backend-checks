@@ -1,7 +1,6 @@
 package uk.gov.nationalarchives.api.update.common
 
 import sangria.ast.Document
-import uk.gov.nationalarchives.api.update.common.exceptions.{AuthorisationException, GraphQlException}
 import uk.gov.nationalarchives.tdr.error.NotAuthorisedError
 import uk.gov.nationalarchives.tdr.keycloak.KeycloakUtils
 import uk.gov.nationalarchives.tdr.{GraphQLClient, GraphQlResponse}
@@ -13,20 +12,23 @@ import com.typesafe.config.ConfigFactory
 
 class ApiUpdate()(implicit val executionContext: ExecutionContext) {
 
-  def send[D, V](keycloakUtils: KeycloakUtils, client: GraphQLClient[D, V], document: Document, variables: V): Future[D] = {
+  def send[D, V](keycloakUtils: KeycloakUtils, client: GraphQLClient[D, V], document: Document, variables: V): Future[Either[String, D]] = {
     val configFactory = ConfigFactory.load
-    val queryResult: Future[GraphQlResponse[D]] = for {
+    val queryResult: Future[Either[String, GraphQlResponse[D]]] = (for {
       token <- keycloakUtils.serviceAccountToken(configFactory.getString("client.id"), configFactory.getString("client.secret"))
       result <- client.getResult(token, document, Option(variables))
-    } yield result
-
-    queryResult.map(result => {
-      result.errors match {
-        case Nil => result.data.get
-        case List(authError: NotAuthorisedError) => throw new AuthorisationException(authError.message)
-        case errors => throw new GraphQlException(errors)
-      }
+    } yield Right(result)) recover(e => {
+      Left(e.getMessage)
     })
+
+    queryResult.map {
+      case Right(response) => response.errors match {
+        case Nil => Right(response.data.get)
+        case List(authError: NotAuthorisedError) => Left(authError.message)
+        case errors => Left(s"GraphQL response contained errors: ${errors.map(e => e.message).mkString}")
+      }
+      case Left(e) => Left(e)
+    }
   }
 }
 

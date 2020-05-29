@@ -4,22 +4,21 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken
 import com.typesafe.config.ConfigFactory
 import org.mockito.ArgumentMatchers._
 import org.mockito.MockitoSugar
+import org.scalatest.EitherValues
 import org.scalatest.matchers.should.Matchers._
 import sangria.ast.Document
 import sttp.client.{HttpError, Response}
 import sttp.model.StatusCode
 import uk.gov.nationalarchives.api.update.common.TestGraphQLObjects.{Data, TestResponse, Variables}
-import uk.gov.nationalarchives.api.update.common.exceptions.{AuthorisationException, GraphQlException}
 import uk.gov.nationalarchives.tdr.GraphQLClient.Extensions
 import uk.gov.nationalarchives.tdr.error.{GraphQlError, HttpException}
 import uk.gov.nationalarchives.tdr.keycloak.KeycloakUtils
 import uk.gov.nationalarchives.tdr.{GraphQLClient, GraphQlResponse}
-import scala.concurrent.duration._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-class CommonTests extends WiremockTest with MockitoSugar {
+class ApiUpdateTests extends WiremockTest with MockitoSugar with EitherValues {
 
   implicit class AwaitFuture[T](future: Future[T]) {
     def await(timeout: Duration = 2.seconds): T = {
@@ -102,10 +101,8 @@ class CommonTests extends WiremockTest with MockitoSugar {
       .thenReturn(Future.successful(new BearerAccessToken("token")))
     when(client.getResult(any[BearerAccessToken], any[Document], any[Option[Variables]])).thenThrow(new HttpException(response))
 
-    val exception = intercept[HttpException] {
-      ApiUpdate().send(keycloakUtils, client, document, variables).await()
-    }
-    exception.getMessage should equal("Unexpected response from GraphQL API: Response(Left(Graphql error),503,,List(),List())")
+    val res: Either[String, Data] = ApiUpdate().send(keycloakUtils, client, document, variables).await()
+    res.left.value shouldEqual("Unexpected response from GraphQL API: Response(Left(Graphql error),503,,List(),List())")
   }
 
   "The send method" should "error if the graphql query returns not authorised errors" in {
@@ -123,10 +120,9 @@ class CommonTests extends WiremockTest with MockitoSugar {
     when(client.getResult(any[BearerAccessToken], any[Document], any[Option[Variables]]))
       .thenReturn(Future.successful(graphqlResponse))
 
-    val exception = intercept[AuthorisationException] {
-      ApiUpdate().send(keycloakUtils, client, document, variables).await()
-    }
-    exception.getMessage should equal("Not authorised message")
+    val res = ApiUpdate().send(keycloakUtils, client, document, variables).await()
+
+    res.left.value shouldEqual("Not authorised message")
   }
 
   "The send method" should "error if the graphql query returns a general error" in {
@@ -144,9 +140,7 @@ class CommonTests extends WiremockTest with MockitoSugar {
     when(client.getResult(any[BearerAccessToken], any[Document], any[Option[Variables]]))
       .thenReturn(Future.successful(graphqlResponse))
 
-    val exception = intercept[GraphQlException] {
-      ApiUpdate().send(keycloakUtils, client, document, variables).await()
-    }
-    exception.getMessage should equal("GraphQL response contained errors: General error")
+    val res = ApiUpdate().send(keycloakUtils, client, document, variables).await()
+    res.left.value shouldEqual("GraphQL response contained errors: General error")
   }
 }

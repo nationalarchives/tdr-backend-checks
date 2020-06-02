@@ -24,15 +24,6 @@ import scala.concurrent.{Await, Future}
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
 
-object Test extends App {
-  val event = new SQSEvent()
-  val record = new SQSMessage()
-  record.setBody("[{\"fileId\": \"4e0fd35b-8d6f-4498-b081-f7401ce6b99b\", \"result\": \"something\", \"datetime\": 1}]")
-
-  event.setRecords(List(record).asJava)
-  new AntivirusUpdate().update(event, null)
-}
-
 class AntivirusUpdate {
 
   case class BodyWithReceiptHandle(body: String, recieptHandle: String)

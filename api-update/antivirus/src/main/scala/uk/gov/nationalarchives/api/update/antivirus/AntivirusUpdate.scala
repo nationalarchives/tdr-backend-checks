@@ -4,11 +4,9 @@ import java.net.URI
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
-import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage
 import com.typesafe.config.ConfigFactory
 import graphql.codegen.AddAntivirusMetadata.AddAntivirusMetadata
 import graphql.codegen.types.AddAntivirusMetadataInput
-import io.circe
 import io.circe.generic.auto._
 import io.circe.parser.decode
 import software.amazon.awssdk.regions.Region

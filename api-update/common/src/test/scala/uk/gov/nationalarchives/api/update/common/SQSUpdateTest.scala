@@ -5,8 +5,9 @@ import org.mockito.{ArgumentCaptor, Mockito, MockitoSugar}
 import org.scalatest.matchers.should.Matchers._
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.{DeleteMessageRequest, DeleteMessageResponse}
+import uk.gov.nationalarchives.api.update.common.utils.ExternalServicesTest
 
-class SQSUpdateTests extends WiremockTest with MockitoSugar  {
+class SQSUpdateTest extends ExternalServicesTest with MockitoSugar  {
   "The deleteMessage method" should "delete a message" in {
     val sqsClient = Mockito.mock(classOf[SqsClient])
     val sqsUpdate = SQSUpdate(sqsClient)

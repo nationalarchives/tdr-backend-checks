@@ -61,13 +61,14 @@ lazy val commonDependencies = Seq(
   circeParser,
   generatedGraphql,
   graphqlClient,
-  lambdaCore % Provided,
-  lambdaEvents % Provided,
+  lambdaCore,
+  lambdaEvents,
   authUtils,
   sqs,
   typesafe,
   mockito % Test,
   wiremock % Test,
   scalaTest % Test,
-  keycloakMock % Test
+  keycloakMock % Test,
+  sqsMock % Test
 )

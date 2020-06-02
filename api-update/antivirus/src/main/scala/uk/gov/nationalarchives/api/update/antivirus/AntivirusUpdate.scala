@@ -1,6 +1,6 @@
 package uk.gov.nationalarchives.api.update.antivirus
 
-import java.util.UUID
+import java.net.URI
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
@@ -12,10 +12,11 @@ import io.circe
 import io.circe.generic.auto._
 import io.circe.parser.decode
 import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.sqs.SqsClient
 import uk.gov.nationalarchives.api.update.common.{ApiUpdate, ResponseProcessor, SQSUpdate}
 import uk.gov.nationalarchives.tdr.GraphQLClient
 import uk.gov.nationalarchives.tdr.keycloak.KeycloakUtils
-import software.amazon.awssdk.services.sqs.{SqsAsyncClient, SqsAsyncClientBuilder}
+import software.amazon.awssdk.http.apache.ApacheHttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -51,7 +52,14 @@ class AntivirusUpdate {
     val apiUpdate = ApiUpdate()
     val client = new GraphQLClient[AddAntivirusMetadata.Data, AddAntivirusMetadata.Variables](configFactory.getString("url.api"))
     val keycloakUtils = KeycloakUtils(configFactory.getString("url.auth"))
-    val sqsClient: SqsAsyncClient = SqsAsyncClient.builder().region(Region.EU_WEST_2).build()
+    val endpoint = configFactory.getString("sqs.endpoint")
+
+    val httpClient = ApacheHttpClient.builder.build
+    val sqsClient: SqsClient = SqsClient.builder()
+      .region(Region.EU_WEST_2)
+      .endpointOverride(new URI(endpoint))
+      .httpClient(httpClient)
+      .build()
     val sqsUpdate = SQSUpdate(sqsClient)
 
     def processInput(inputWithReceiptHandle: InputWithReceiptHandle): List[Future[Either[String, String]]] = {
@@ -60,7 +68,7 @@ class AntivirusUpdate {
           apiUpdate.send(keycloakUtils, client, AddAntivirusMetadata.document, AddAntivirusMetadata.Variables(List(avInput)))
         response.map {
           case Right(_) =>
-            sqsUpdate.deleteSqsMessage("", inputWithReceiptHandle.receiptHandle)
+            sqsUpdate.deleteSqsMessage(configFactory.getString("sqs.url"), inputWithReceiptHandle.receiptHandle)
             Right(s"${avInput.fileId} was successful")
           case Left(e) => Left(s"${avInput.fileId} failed with error $e")
         }

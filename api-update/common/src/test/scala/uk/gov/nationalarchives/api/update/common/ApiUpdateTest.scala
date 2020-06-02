@@ -9,22 +9,16 @@ import org.scalatest.matchers.should.Matchers._
 import sangria.ast.Document
 import sttp.client.{HttpError, Response}
 import sttp.model.StatusCode
-import uk.gov.nationalarchives.api.update.common.TestGraphQLObjects.{Data, TestResponse, Variables}
+import uk.gov.nationalarchives.api.update.common.utils.TestGraphQLObjects.{Data, TestResponse, Variables}
+import uk.gov.nationalarchives.api.update.common.utils.ExternalServicesTest
 import uk.gov.nationalarchives.tdr.GraphQLClient.Extensions
 import uk.gov.nationalarchives.tdr.error.{GraphQlError, HttpException}
 import uk.gov.nationalarchives.tdr.keycloak.KeycloakUtils
 import uk.gov.nationalarchives.tdr.{GraphQLClient, GraphQlResponse}
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
-class ApiUpdateTests extends WiremockTest with MockitoSugar with EitherValues {
-
-  implicit class AwaitFuture[T](future: Future[T]) {
-    def await(timeout: Duration = 2.seconds): T = {
-      Await.result(future, timeout)
-    }
-  }
+class ApiUpdateTest extends ExternalServicesTest with MockitoSugar with EitherValues {
 
   "The send method" should "request a service account token" in {
     val apiUpdate = ApiUpdate()

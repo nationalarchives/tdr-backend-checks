@@ -1,12 +1,19 @@
 package uk.gov.nationalarchives.api.update.antivirus
 
+import java.net.URI
+
 import com.github.tomakehurst.wiremock.client.WireMock.{equalTo, equalToJson, postRequestedFor, urlEqualTo}
-import uk.gov.nationalarchives.api.update.common.AWSInputs._
-import uk.gov.nationalarchives.api.update.common.WiremockTest
+import org.scalatest.matchers.should.Matchers._
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.sqs.SqsClient
+import software.amazon.awssdk.services.sqs.model.{ReceiveMessageRequest, SendMessageRequest}
+import uk.gov.nationalarchives.api.update.common.utils.AWSInputs._
+import uk.gov.nationalarchives.api.update.common.utils.ExternalServicesTest
 
 import scala.io.Source.fromResource
+import scala.util.Try
 
-class AntivirusAntivirusUpdateTest extends WiremockTest {
+class AntivirusAntivirusUpdateTest extends ExternalServicesTest {
 
   def verifyWiremockResponse(fileName: String) = {
     wiremockGraphqlServer.verify(postRequestedFor(urlEqualTo(graphQlPath))
@@ -46,6 +53,49 @@ class AntivirusAntivirusUpdateTest extends WiremockTest {
     verifyWiremockResponse("graphql_valid_av_multiple_records_multiple_expected_2")
     verifyWiremockResponse("graphql_valid_av_multiple_records_multiple_expected_3")
     verifyWiremockResponse("graphql_valid_av_multiple_records_multiple_expected_4")
-
   }
+
+  "The update method" should "delete a successful message from the queue" in {
+    val event = sqsEvent("function_valid_av_input")
+    client.sendMessage(request(event.getRecords.get(0).getBody))
+    authOkJson("access_token")
+    graphqlOkJson("graphql_valid_av_response")
+    val main = new AntivirusUpdate()
+    main.update(sqsEvent("function_valid_av_input"), context)
+    val messages = client.receiveMessage(ReceiveMessageRequest.builder.queueUrl(queueUrl).build)
+    messages.hasMessages should be(false)
+  }
+
+  "The update method" should "leave a failed message in the queue" in {
+    val event = sqsEvent("function_valid_av_input")
+    client.sendMessage(request(event.getRecords.get(0).getBody))
+    val main = new AntivirusUpdate()
+    Try(main.update(event, context))
+    val messages = client.receiveMessage(ReceiveMessageRequest.builder.queueUrl(queueUrl).build)
+    messages.hasMessages should be(true)
+  }
+
+  "The update method" should "delete a successful message and leave a failed message in the queue" in {
+    val event = sqsEvent("function_valid_av_input", "function_invalid_av_input")
+    client.sendMessage(request(event.getRecords.get(0).getBody))
+    client.sendMessage(request(event.getRecords.get(1).getBody))
+
+    authOkJson("access_token")
+    graphqlOkJson("graphql_valid_av_response")
+    val main = new AntivirusUpdate()
+    Try(main.update(event, context))
+    val messages = client.receiveMessage(ReceiveMessageRequest.builder.queueUrl(queueUrl).build)
+    messages.hasMessages should be(true)
+    messages.messages.size should be(1)
+  }
+
+  private def request(body: String) = SendMessageRequest.builder()
+    .messageBody(body)
+    .queueUrl(queueUrl)
+    .build()
+
+  private def client = SqsClient.builder()
+    .region(Region.EU_WEST_2)
+    .endpointOverride(new URI(s"http://localhost:$port"))
+    .build()
 }

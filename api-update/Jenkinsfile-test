@@ -17,8 +17,8 @@ pipeline {
             steps {
                 dir("api-update") {
                     sh "sbt test antivirus/assembly"
-                    sh "mv antivirus/target/scala-2.13/antivirus-assembly-*.jar antivirus/target/scala-2.13/antivirus.jar"
-                    stash includes: "antivirus/target/scala-2.13/antivirus.jar", name: "antivirus-jar"
+                    sh "mv antivirus/target/scala-2.13/antivirus-assembly-*.jar antivirus/target/scala-2.13/antivirus-api-update.jar"
+                    stash includes: "antivirus/target/scala-2.13/antivirus-api-update.jar", name: "antivirus-api-update-jar"
                 }
             }
         }
@@ -38,11 +38,11 @@ pipeline {
                 stage('Deploy to integration') {
                     steps {
                         script {
-                            unstash "antivirus-jar"
-                            sh "cp antivirus/target/scala-2.13/antivirus.jar /"
+                            unstash "antivirus-api-update-jar"
+                            sh "cp antivirus/target/scala-2.13/antivirus-api-update.jar /"
                             def accountNumber = getAccountNumberFromStage()
-                            // sh "python /upload_to_s3.py ${accountNumber} ${params.STAGE} tdr-backend-code-mgmt ${versionTag}/antivirus.jar /antivirus.jar"
-                            sh "aws s3 cp /antivirus.jar s3://tdr-backend-code-mgmt/${versionTag}/antivirus.jar"
+                            // sh "python /upload_to_s3.py ${accountNumber} ${params.STAGE} tdr-backend-code-mgmt ${versionTag}/antivirus-api-update.jar /antivirus-api-update.jar"
+                            sh "aws s3 cp /antivirus-api-update.jar s3://tdr-backend-code-mgmt/${versionTag}/antivirus-api-update.jar"
 
                             sh 'git config --global user.email tna-digital-archiving-jenkins@nationalarchives.gov.uk'
                             sh 'git config --global user.name tna-digital-archiving-jenkins'

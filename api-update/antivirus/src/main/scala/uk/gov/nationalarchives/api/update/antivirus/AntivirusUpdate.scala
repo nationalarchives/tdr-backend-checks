@@ -4,7 +4,6 @@ import java.net.URI
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.events.SQSEvent
-import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage
 import com.typesafe.config.ConfigFactory
 import graphql.codegen.AddAntivirusMetadata.AddAntivirusMetadata
 import graphql.codegen.types.AddAntivirusMetadataInput
@@ -23,15 +22,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
-
-object Test extends App {
-  val event = new SQSEvent()
-  val record = new SQSMessage()
-  record.setBody("[{\"fileId\": \"4e0fd35b-8d6f-4498-b081-f7401ce6b99b\", \"result\": \"something\", \"datetime\": 1}]")
-
-  event.setRecords(List(record).asJava)
-  new AntivirusUpdate().update(event, null)
-}
 
 class AntivirusUpdate {
 
@@ -65,7 +55,7 @@ class AntivirusUpdate {
     def processInput(inputWithReceiptHandle: InputWithReceiptHandle): List[Future[Either[String, String]]] = {
       inputWithReceiptHandle.input.map(avInput => {
         val response: Future[Either[String, AddAntivirusMetadata.Data]] =
-          apiUpdate.send(keycloakUtils, client, AddAntivirusMetadata.document, AddAntivirusMetadata.Variables(List(avInput)))
+          apiUpdate.send(keycloakUtils, client, AddAntivirusMetadata.document, AddAntivirusMetadata.Variables(avInput))
         response.map {
           case Right(_) =>
             sqsUpdate.deleteSqsMessage(configFactory.getString("sqs.url"), inputWithReceiptHandle.receiptHandle)

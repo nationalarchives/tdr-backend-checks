@@ -1,12 +1,10 @@
 {
-  "query": "mutation AddAntivirusMetadata($input:[AddAntivirusMetadataInput!]!){addAntivirusMetadata(addAntivirusMetadataInput:$input){fileId software value softwareVersion databaseVersion result datetime}}",
+  "query": "mutation AddAntivirusMetadata($input:AddAntivirusMetadataInput!){addAntivirusMetadata(addAntivirusMetadataInput:$input){fileId software value softwareVersion databaseVersion result datetime}}",
   "variables": {
-    "input": [
-      {
-        "fileId": "3aa0b9ad-6763-4bb2-ad40-18cdeada1fbf",
-        "result": "something",
-        "datetime": 1
-      }
-    ]
+    "input": {
+      "fileId": "3aa0b9ad-6763-4bb2-ad40-18cdeada1fbf",
+      "result": "something",
+      "datetime": 1
+    }
   }
 }

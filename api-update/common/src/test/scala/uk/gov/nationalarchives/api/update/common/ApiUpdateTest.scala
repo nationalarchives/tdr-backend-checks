@@ -84,11 +84,8 @@ class ApiUpdateTest extends ExternalServicesTest with MockitoSugar with EitherVa
     val keycloakUtils = mock[KeycloakUtils]
 
     val variables = Variables()
-    val body: Either[String, String] = if (false) {
-      Right("ok")
-    } else {
-      Left("Graphql error")
-    }
+    val body: Either[String, String] = Left("Graphql error")
+
     val response = Response(body, StatusCode.ServiceUnavailable)
 
     when(keycloakUtils.serviceAccountToken(any[String], any[String]))

@@ -15,12 +15,3 @@ To run the other project tests, e.g. for the antivirus
 To build the jar
 
 `sbt antivirus/assembly`
-
-To run the tests in IntelliJ, you will need to set environment variables. These are set in the sbt file which isn't read by intellij
-```
-"API_URL" -> "http://localhost:9001/graphql" 
-"AUTH_URL" -> "http://localhost:9002/auth" 
-"CLIENT_ID" -> "id" 
-"CLIENT_SECRET" -> "secret"
-```
-

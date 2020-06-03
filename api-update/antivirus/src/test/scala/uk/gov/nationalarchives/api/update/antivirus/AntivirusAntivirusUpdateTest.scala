@@ -33,8 +33,8 @@ class AntivirusAntivirusUpdateTest extends ExternalServicesTest {
     authOkJson("access_token")
     graphqlOkJson("graphql_valid_av_response")
     new AntivirusUpdate().update(sqsEvent("function_valid_av_multiple_input"), context)
-    verifyWiremockResponse("graphql_valid_av_multiple_expected_1")
-    verifyWiremockResponse("graphql_valid_av_multiple_expected_2")
+    verifyWiremockResponse("graphql_valid_av_multiple_records_expected_1")
+    verifyWiremockResponse("graphql_valid_av_multiple_records_expected_1")
   }
 
   "The update method" should "call the graphql api with multiple records with a single antivirus update" in {

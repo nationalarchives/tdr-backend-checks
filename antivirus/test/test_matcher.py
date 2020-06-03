@@ -293,7 +293,7 @@ def test_output_sent_to_queue_multiple_records(s3, sqs, mocker):
     matcher.matcher_lambda_handler(get_records("testbucket", "test", 2), None)
     res = sqs.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=10)
     messages = res["Messages"]
-    assert len(messages) == 1
+    assert len(messages) == 2
 
 
 def test_copy_to_quarantine(s3, sqs, s3_client, mocker):

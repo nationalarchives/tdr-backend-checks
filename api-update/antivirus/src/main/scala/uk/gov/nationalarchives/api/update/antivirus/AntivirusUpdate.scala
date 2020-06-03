@@ -27,7 +27,7 @@ class AntivirusUpdate {
 
   case class BodyWithReceiptHandle(body: String, recieptHandle: String)
 
-  case class InputWithReceiptHandle(input: List[AddAntivirusMetadataInput], receiptHandle: String)
+  case class InputWithReceiptHandle(input: AddAntivirusMetadataInput, receiptHandle: String)
 
   def update(event: SQSEvent, context: Context): Seq[String] = {
 
@@ -35,7 +35,7 @@ class AntivirusUpdate {
     val inputWithReceiptHandleOrErrors: List[Either[circe.Error, InputWithReceiptHandle]] = event.getRecords.asScala
       .map(r => BodyWithReceiptHandle(r.getBody, r.getReceiptHandle))
       .map(bodyWithReceiptHandle => {
-        decode[List[AddAntivirusMetadataInput]](bodyWithReceiptHandle.body)
+        decode[AddAntivirusMetadataInput](bodyWithReceiptHandle.body)
           .map(avUpdates => InputWithReceiptHandle(avUpdates, bodyWithReceiptHandle.recieptHandle))
       }).toList
 
@@ -52,22 +52,22 @@ class AntivirusUpdate {
       .build()
     val sqsUpdate = SQSUpdate(sqsClient)
 
-    def processInput(inputWithReceiptHandle: InputWithReceiptHandle): List[Future[Either[String, String]]] = {
-      inputWithReceiptHandle.input.map(avInput => {
-        val response: Future[Either[String, AddAntivirusMetadata.Data]] =
-          apiUpdate.send(keycloakUtils, client, AddAntivirusMetadata.document, AddAntivirusMetadata.Variables(avInput))
-        response.map {
-          case Right(_) =>
-            sqsUpdate.deleteSqsMessage(configFactory.getString("sqs.url"), inputWithReceiptHandle.receiptHandle)
-            Right(s"${avInput.fileId} was successful")
-          case Left(e) => Left(s"${avInput.fileId} failed with error $e")
-        }
-      })
+
+    def processInput(inputWithReceiptHandle: InputWithReceiptHandle): Future[Either[String, String]] = {
+      val avInput = inputWithReceiptHandle.input
+      val response: Future[Either[String, AddAntivirusMetadata.Data]] =
+        apiUpdate.send(keycloakUtils, client, AddAntivirusMetadata.document, AddAntivirusMetadata.Variables(avInput))
+      response.map {
+        case Right(_) =>
+          sqsUpdate.deleteSqsMessage(configFactory.getString("sqs.url"), inputWithReceiptHandle.receiptHandle)
+          Right(s"${avInput.fileId} was successful")
+        case Left(e) => Left(s"${avInput.fileId} failed with error $e")
+      }
     }
 
-    val responses: Seq[Future[Either[String, String]]] = inputWithReceiptHandleOrErrors.flatMap {
+    val responses: Seq[Future[Either[String, String]]] = inputWithReceiptHandleOrErrors.map {
       case Right(inputWithReceiptHandle) => processInput(inputWithReceiptHandle)
-      case Left(err) => List(Future.successful(Left(err.getMessage)))
+      case Left(err) => Future.successful(Left(err.getMessage))
     }
 
     Await.result(ResponseProcessor().process(Future.sequence(responses)), 10 seconds)

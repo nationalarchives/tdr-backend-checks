@@ -55,7 +55,7 @@ class AntivirusUpdate {
     def processInput(inputWithReceiptHandle: InputWithReceiptHandle): List[Future[Either[String, String]]] = {
       inputWithReceiptHandle.input.map(avInput => {
         val response: Future[Either[String, AddAntivirusMetadata.Data]] =
-          apiUpdate.send(keycloakUtils, client, AddAntivirusMetadata.document, AddAntivirusMetadata.Variables(List(avInput)))
+          apiUpdate.send(keycloakUtils, client, AddAntivirusMetadata.document, AddAntivirusMetadata.Variables(avInput))
         response.map {
           case Right(_) =>
             sqsUpdate.deleteSqsMessage(configFactory.getString("sqs.url"), inputWithReceiptHandle.receiptHandle)

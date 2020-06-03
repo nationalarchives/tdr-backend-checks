@@ -13,7 +13,6 @@ logger.setLevel(INFO)
 
 
 def matcher_lambda_handler(event, lambda_context):
-    outputs = []
     if "Records" in event:
         sqs_client = boto3.client("sqs")
         s3_client = boto3.client("s3")
@@ -46,11 +45,9 @@ def matcher_lambda_handler(event, lambda_context):
                       "result": result,
                       "datetime": time,
                       "fileId": key.split("/")[-1] }
-            outputs.append(output)
+            sqs_client.send_message(QueueUrl=os.environ["SQS_URL"], MessageBody=json.dumps(outputs))
             logger.info("Key %s processed", key)
 
-
-        sqs_client.send_message(QueueUrl=os.environ["SQS_URL"], MessageBody=json.dumps(outputs))
         return outputs
     else:
         logger.info("Message does not contain any records")

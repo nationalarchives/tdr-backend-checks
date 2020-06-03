@@ -1,11 +1,10 @@
-package uk.gov.nationalarchives.tdr.filecheck.checksum
+package uk.gov.nationalarchives.checksum
 
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
-import software.amazon.awssdk.core.{ResponseBytes, ResponseInputStream, sync}
+import software.amazon.awssdk.core.ResponseBytes
 import software.amazon.awssdk.core.sync.ResponseTransformer
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.{GetObjectRequest, GetObjectResponse, HeadObjectRequest}
-import software.amazon.awssdk.regions.Region
 
 
 class UploadBucketClient(bucketName: String, key: String) {

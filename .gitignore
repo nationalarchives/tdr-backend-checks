@@ -1,4 +1,5 @@
 .idea
 antivirus/venv
 antivirus/output
+checksum/target
 __pycache__

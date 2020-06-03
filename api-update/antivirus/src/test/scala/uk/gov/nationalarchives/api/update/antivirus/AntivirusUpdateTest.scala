@@ -13,7 +13,7 @@ import uk.gov.nationalarchives.api.update.common.utils.ExternalServicesTest
 import scala.io.Source.fromResource
 import scala.util.Try
 
-class AntivirusAntivirusUpdateTest extends ExternalServicesTest {
+class AntivirusUpdateTest extends ExternalServicesTest {
 
   def verifyWiremockResponse(fileName: String) = {
     wiremockGraphqlServer.verify(postRequestedFor(urlEqualTo(graphQlPath))

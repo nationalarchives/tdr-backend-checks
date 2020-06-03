@@ -5,19 +5,20 @@ import java.net.URI
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import io.findify.sqsmock.SQSService
-import org.scalatest.concurrent.ScalaFutures.{PatienceConfig, scaled}
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.SqsClient
-import software.amazon.awssdk.services.sqs.model.{CreateQueueRequest, SendMessageRequest}
+import software.amazon.awssdk.services.sqs.model.CreateQueueRequest
 
-import scala.concurrent.duration.{Duration, _}
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.io.Source.fromResource
 
-class ExternalServicesTest extends AnyFlatSpec with BeforeAndAfterEach with BeforeAndAfterAll {
+class ExternalServicesTest extends AnyFlatSpec with BeforeAndAfterEach with BeforeAndAfterAll with ScalaFutures {
+
+  override implicit def patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)), interval = scaled(Span(100, Millis)))
 
   val wiremockGraphqlServer = new WireMockServer(9001)
   val wiremockAuthServer = new WireMockServer(9002)
@@ -29,8 +30,6 @@ class ExternalServicesTest extends AnyFlatSpec with BeforeAndAfterEach with Befo
   val queueUrl = s"http://localhost:$port/$account/$queueName"
 
   implicit val ec: ExecutionContext = ExecutionContext.global
-
-  implicit val patienceConfig: PatienceConfig = PatienceConfig(timeout = scaled(Span(5, Seconds)), interval = scaled(Span(100, Millis)))
 
   val graphQlPath = "/graphql"
   val authPath = "/auth/realms/tdr/protocol/openid-connect/token"
@@ -70,12 +69,5 @@ class ExternalServicesTest extends AnyFlatSpec with BeforeAndAfterEach with Befo
     wiremockGraphqlServer.resetAll()
 
   }
-
-  implicit class AwaitFuture[T](future: Future[T]) {
-    def await(timeout: Duration = 2.seconds): T = {
-      Await.result(future, timeout)
-    }
-  }
-
 }
 

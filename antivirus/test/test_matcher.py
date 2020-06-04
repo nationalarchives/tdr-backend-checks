@@ -4,6 +4,7 @@ from moto import mock_s3, mock_sqs
 import os
 from src import matcher
 import yara
+import json
 
 
 @pytest.fixture(scope='function')
@@ -76,9 +77,17 @@ def get_records(bucket, key, num=1):
                 }
             }
         )
-    return {
+    message = json.dumps({
         "Records": records
+    })
+    return {
+        "Records" : [
+            {
+                "body" : json.dumps({"Message": message})
+            }
+        ]
     }
+
 
 
 def test_load_is_called(s3, sqs, mocker):
@@ -122,13 +131,21 @@ def test_correct_file_id_provided(s3, sqs, mocker):
     s3.Object("testbucket", "cognitoId/fileId").put(Body="test")
     mocker.patch('yara.load')
     yara.load.return_value = MockRulesMatchFound()
-    records = {
+    s3_records = {
         "Records": [
             {
                 "s3": {
                     "bucket": {"name": "testbucket"},
                     "object": {"key": "cognitoId/fileId"}
                 }
+            }
+        ]
+    }
+    message = json.dumps(s3_records)
+    records = {
+        "Records": [
+            {
+                "body": json.dumps({"Message": message})
             }
         ]
     }
@@ -276,7 +293,7 @@ def test_output_sent_to_queue_multiple_records(s3, sqs, mocker):
     matcher.matcher_lambda_handler(get_records("testbucket", "test", 2), None)
     res = sqs.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=10)
     messages = res["Messages"]
-    assert len(messages) == 1
+    assert len(messages) == 2
 
 
 def test_copy_to_quarantine(s3, sqs, s3_client, mocker):

@@ -57,13 +57,13 @@ Zip the contents
 
 `zip -r9 function.zip .`
 
-Upload to an S3 in the management account
+Upload to an S3 bucket
 
-`aws s3 cp function.zip s3://tdr-backend-checks/yara-av.zip`
+`aws s3 cp function.zip s3://tdr-backend-checks-$STAGE/yara-av.zip`
 
 Update the lambda function in the environment account. You will need credentials for whichever environment you're deploying to
 
-`aws lambda update-function-code --function-name tdr-yara-av-$STAGE --s3-bucket tdr-backend-checks --s3-key yara-av.zip`
+`aws lambda update-function-code --function-name tdr-yara-av-$STAGE --s3-bucket tdr-backend-checks-$STAGE --s3-key yara-av.zip`
 
 Publish a new lambda version. This is how we keep track of the database version 
 

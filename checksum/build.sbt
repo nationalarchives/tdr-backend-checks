@@ -21,7 +21,7 @@ libraryDependencies += "software.amazon.awssdk" % "s3" % "2.13.18"
 libraryDependencies += "com.amazonaws" % "aws-lambda-java-core" % "1.2.1"
 libraryDependencies += "com.amazonaws" % "aws-lambda-java-events" % "3.1.0"
 
-libraryDependencies += "uk.gov.nationalarchives" %% "tdr-generated-graphql" % "0.0.48-SNAPSHOT"
+libraryDependencies += "uk.gov.nationalarchives" %% "tdr-generated-graphql" % "0.0.49"
 
 libraryDependencies += "com.typesafe" % "config" % "1.4.0"
 

@@ -2,4 +2,5 @@
 antivirus/venv
 antivirus/output
 checksum/target
+checksum/project/target
 __pycache__

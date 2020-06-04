@@ -2,11 +2,11 @@ package uk.gov.nationalarchives.checksum
 
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.SqsClient
-import software.amazon.awssdk.services.sqs.model.{DeleteMessageRequest, SendMessageRequest}
+import software.amazon.awssdk.services.sqs.model.{DeleteMessageRequest, DeleteMessageResponse, SendMessageRequest, SendMessageResponse}
 
 class SQSUtils(sqsClient: SqsClient) {
 
-  def send(queueUrl: String, messageBody: String): Unit = {
+  def send(queueUrl: String, messageBody: String): SendMessageResponse = {
     sqsClient.sendMessage(SendMessageRequest.builder()
       .queueUrl("")
       .messageBody(messageBody)
@@ -14,7 +14,7 @@ class SQSUtils(sqsClient: SqsClient) {
       .build())
   }
 
-  def delete(queueUrl: String, receiptHandle: String) = {
+  def delete(queueUrl: String, receiptHandle: String): DeleteMessageResponse = {
     sqsClient.deleteMessage(
       DeleteMessageRequest.builder()
         .queueUrl(queueUrl)

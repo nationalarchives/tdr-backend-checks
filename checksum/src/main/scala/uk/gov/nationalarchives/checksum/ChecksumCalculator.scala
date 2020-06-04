@@ -14,9 +14,11 @@ import io.circe
 import io.circe.parser.decode
 import io.circe.{Decoder, HCursor}
 import graphql.codegen.AddFileMetadata.addFileMetadata.Variables
-import graphql.codegen.types.{AddFileMetadataInput, FileMetadataValues}
+import graphql.codegen.types.AddFileMetadataInput
 import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.sqs.SqsClient
+import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
@@ -65,7 +67,7 @@ object Test extends App {
 class ChecksumCalculator {
   case class EventWithReceiptHandle(event: S3Event, receiptHandle: String)
 
-  def update(event: SQSEvent, context: Context) = {
+  def update(event: SQSEvent, context: Context): List[SendMessageResponse] = {
     val eventsOrError: List[Either[circe.Error, EventWithReceiptHandle]] = event.getRecords.asScala.map(record => {
       for {
         snsDecoded <- decode[SNS](record.getBody)
@@ -86,23 +88,25 @@ class ChecksumCalculator {
     val configFactory = ConfigFactory.load
 
     List[String]().map(er => er)
-    val values: List[FileMetadataValues] = succeeded.flatMap(eventWithReceiptHandle => eventWithReceiptHandle.event.getRecords.asScala.toList.map(record => {
+    val values: List[SendMessageResponse] = succeeded.flatMap(eventWithReceiptHandle => eventWithReceiptHandle.event.getRecords.asScala.toList.map(record => {
       val s3 = record.getS3
-      val checksum = ChecksumGenerator(s3.getBucket.getName, s3.getObject.getKey).generate()
+      val s3Client: S3Client = S3Client.builder.region(Region.EU_WEST_2).build()
+      val uploadBucketClient = new UploadBucketClient(s3Client, s3.getBucket.getName, s3.getObject.getKey)
+      val checksumGenerator = ChecksumGenerator().generate(uploadBucketClient, record.getS3.getObject.getSizeAsLong)
       val keyToArray: Array[String] = s3.getObject.getKey.split("/")
       val fileId = UUID.fromString(keyToArray(keyToArray.length - 1))
-      sqsUtils.delete(configFactory.getString("sqs.queue.input"), eventWithReceiptHandle.receiptHandle)
-      FileMetadataValues(fileId, checksum)
-    }))
 
-    if(values.nonEmpty) {
-      val messageBody = AddFileMetadataInput("SHA256ServerSideChecksum", values).asJson.noSpaces
+      val messageBody = AddFileMetadataInput("SHA256ServerSideChecksum", fileId, checksumGenerator).asJson.noSpaces
+      sqsUtils.delete(configFactory.getString("sqs.queue.input"), eventWithReceiptHandle.receiptHandle)
+
       sqsUtils.send(configFactory.getString("sqs.queue.input"), messageBody)
-    }
+
+    }))
 
     if(failed.nonEmpty) {
       throw new RuntimeException(failed.mkString(", "))
+    } else {
+      values
     }
-
   }
 }

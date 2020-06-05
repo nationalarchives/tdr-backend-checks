@@ -52,9 +52,9 @@ pipeline {
 
                             sh 'git config --global user.email tna-digital-archiving-jenkins@nationalarchives.gov.uk'
                             sh 'git config --global user.name tna-digital-archiving-jenkins'
-                            sh "git tag v${versionTag}"
+                            sh "git tag ${versionTag}"
                             sshagent(['github-jenkins']) {
-                                sh("git push origin v${versionTag}")
+                                sh("git push origin ${versionTag}")
                             }
                             build(
                                     job: "TDR Backend Checks Deploy",

@@ -2,10 +2,8 @@ package uk.gov.nationalarchives.checksum
 
 import software.amazon.awssdk.core.ResponseBytes
 import software.amazon.awssdk.core.sync.ResponseTransformer
-import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
-import software.amazon.awssdk.services.s3.model.{GetObjectRequest, GetObjectResponse, HeadObjectRequest}
-
+import software.amazon.awssdk.services.s3.model.{GetObjectRequest, GetObjectResponse}
 
 class UploadBucketClient(s3Client: S3Client, bucketName: String, key: String) {
 
@@ -21,5 +19,5 @@ class UploadBucketClient(s3Client: S3Client, bucketName: String, key: String) {
 }
 
 object UploadBucketClient {
-  def apply(bucketName: String, key: String): UploadBucketClient = new UploadBucketClient(bucketName, key)
+  def apply(s3Client: S3Client, bucketName: String, key: String): UploadBucketClient = new UploadBucketClient(s3Client, bucketName, key)
 }

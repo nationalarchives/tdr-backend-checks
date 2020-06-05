@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.events.SNSEvent.SNS
 import com.amazonaws.services.lambda.runtime.events.models.s3.S3EventNotification
 import com.amazonaws.services.lambda.runtime.events.models.s3.S3EventNotification.{S3Entity, S3EventNotificationRecord}
 import io.circe.{Decoder, HCursor}
+import scala.jdk.CollectionConverters._
 
 object AWSDecoders {
 

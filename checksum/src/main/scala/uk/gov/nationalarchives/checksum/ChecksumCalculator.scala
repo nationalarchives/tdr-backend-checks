@@ -16,6 +16,7 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.sqs.SqsClient
 import uk.gov.nationalarchives.checksum.AWSDecoders._
+import java.net.URLDecoder
 
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
@@ -54,7 +55,7 @@ class ChecksumCalculator {
         .httpClient(httpClient)
         .build()
 
-      val uploadBucketClient = new UploadBucketClient(s3Client, s3.getBucket.getName, s3.getObject.getKey)
+      val uploadBucketClient = new UploadBucketClient(s3Client, s3.getBucket.getName, URLDecoder.decode(s3.getObject.getKey, "utf-8"))
       val checksumGenerator = Try(ChecksumGenerator().generate(uploadBucketClient, record.getS3.getObject.getSizeAsLong)).toEither
 
       checksumGenerator.map(checksum => {

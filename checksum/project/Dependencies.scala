@@ -5,7 +5,7 @@ object Dependencies {
   lazy val s3Sdk = "software.amazon.awssdk" % "s3" % "2.13.18"
   lazy val lambdaJavaCore = "com.amazonaws" % "aws-lambda-java-core" % "1.2.1"
   lazy val lambdaJavaEvents = "com.amazonaws" % "aws-lambda-java-events" % "3.1.0"
-  lazy val generatedGraphql = "uk.gov.nationalarchives" %% "tdr-generated-graphql" % "0.0.49"
+  lazy val generatedGraphql = "uk.gov.nationalarchives" %% "tdr-generated-graphql" % "0.0.48"
   lazy val typesafe = "com.typesafe" % "config" % "1.4.0"
   lazy val scalaTest = "org.scalatest" %% "scalatest" % "3.1.1"
   lazy val sqsMock = "io.findify" %% "sqsmock" % "0.3.5"

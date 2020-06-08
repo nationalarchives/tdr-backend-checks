@@ -11,6 +11,7 @@ import graphql.codegen.types.AddFileMetadataInput
 import io.circe
 import io.circe.parser.decode
 import io.circe.syntax._
+import software.amazon.awssdk.http.apache.ApacheHttpClient
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.sqs.SqsClient
@@ -36,9 +37,11 @@ class ChecksumCalculator {
 
     val configFactory = ConfigFactory.load
 
+    val httpClient = ApacheHttpClient.builder.build
     val sqsClient: SqsClient = SqsClient.builder()
       .region(Region.EU_WEST_2)
       .endpointOverride(URI.create(configFactory.getString("sqs.endpoint")))
+      .httpClient(httpClient)
       .build()
 
     val sqsUtils: SQSUtils = SQSUtils(sqsClient)
@@ -48,6 +51,7 @@ class ChecksumCalculator {
       val s3Client: S3Client = S3Client.builder
         .region(Region.EU_WEST_2)
         .endpointOverride(URI.create(configFactory.getString("s3.endpoint")))
+        .httpClient(httpClient)
         .build()
 
       val uploadBucketClient = new UploadBucketClient(s3Client, s3.getBucket.getName, s3.getObject.getKey)

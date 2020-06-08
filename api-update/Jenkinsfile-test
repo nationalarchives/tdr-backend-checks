@@ -1,4 +1,7 @@
+library("tdr-jenkinslib")
+
 def versionTag = "v${env.BUILD_NUMBER}"
+def repo = "tdr-backend-checks"
 
 pipeline {
     agent {
@@ -15,6 +18,9 @@ pipeline {
                 }
             }
             steps {
+                script {
+                    tdr.reportStartOfBuildToGitHub(repo)
+                }
                 dir("api-update") {
                     sh "sbt test antivirus/assembly"
                     sh "mv antivirus/target/scala-2.13/antivirus-assembly-*.jar antivirus/target/scala-2.13/antivirus-api-update.jar"
@@ -40,15 +46,15 @@ pipeline {
                         script {
                             unstash "antivirus-api-update-jar"
                             sh "cp antivirus/target/scala-2.13/antivirus-api-update.jar /"
-                            def accountNumber = getAccountNumberFromStage()
+                            def accountNumber = tdr.getAccountNumberFromStage(params.STAGE)
                             // sh "python /upload_to_s3.py ${accountNumber} ${params.STAGE} tdr-backend-code-mgmt ${versionTag}/antivirus-api-update.jar /antivirus-api-update.jar"
                             sh "aws s3 cp /antivirus-api-update.jar s3://tdr-backend-code-mgmt/${versionTag}/antivirus-api-update.jar"
 
                             sh 'git config --global user.email tna-digital-archiving-jenkins@nationalarchives.gov.uk'
                             sh 'git config --global user.name tna-digital-archiving-jenkins'
-                            sh "git tag v${versionTag}"
+                            sh "git tag ${versionTag}"
                             sshagent(['github-jenkins']) {
-                                sh("git push origin v${versionTag}")
+                                sh("git push origin ${versionTag}")
                             }
                             build(
                                     job: "TDR Backend Checks Deploy",
@@ -63,14 +69,16 @@ pipeline {
             }
         }
     }
-}
-
-def getAccountNumberFromStage() {
-    def stageToAccountMap = [
-            "intg": env.INTG_ACCOUNT,
-            "staging": env.STAGING_ACCOUNT,
-            "prod": env.PROD_ACCOUNT
-    ]
-
-    return stageToAccountMap.get(params.STAGE)
+    post {
+        failure {
+            script {
+                tdr.reportFailedBuildToGitHub(repo)
+            }
+        }
+        success {
+            script {
+                tdr.reportSuccessfulBuildToGitHub(repo)
+            }
+        }
+    }
 }

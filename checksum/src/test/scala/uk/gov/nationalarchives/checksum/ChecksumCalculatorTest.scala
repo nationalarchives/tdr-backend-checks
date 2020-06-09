@@ -28,14 +28,14 @@ class ChecksumCalculatorTest extends AnyFlatSpec with BeforeAndAfterAll with Bef
     deleteBucket()
   }
 
-  "The method" should "put a message in the output queue if the message is successful " in {
+  "The update method" should "put a message in the output queue if the message is successful " in {
     putFile("ten_bytes")
     new ChecksumCalculator().update(createEvent("sns_s3_event"), null)
     val msgs = outputQueueHelper.receive
     msgs.size should equal(1)
   }
 
-  "The method" should "put one message in the output queue, delete the successful message and leave the key error message" in {
+  "The update method" should "put one message in the output queue, delete the successful message and leave the key error message" in {
     putFile("ten_bytes")
     Try(new ChecksumCalculator().update(createEvent("sns_s3_event", "sns_s3_no_key"), null))
     val outputMessages = outputQueueHelper.receive
@@ -44,7 +44,7 @@ class ChecksumCalculatorTest extends AnyFlatSpec with BeforeAndAfterAll with Bef
     inputMessages.size should equal(1)
   }
 
-  "The method" should "put one message in the output queue, delete the successful message and leave the decoding error message" in {
+  "The update method" should "put one message in the output queue, delete the successful message and leave the decoding error message" in {
     putFile("ten_bytes")
     Try(new ChecksumCalculator().update(createEvent("sns_s3_event", "sns_s3_invalid_json"), null))
     val outputMessages = outputQueueHelper.receive
@@ -53,7 +53,7 @@ class ChecksumCalculatorTest extends AnyFlatSpec with BeforeAndAfterAll with Bef
     inputMessages.size should equal(1)
   }
 
-  "The method" should "leave the queues unchanged if there are no successful messages" in {
+  "The update method" should "leave the queues unchanged if there are no successful messages" in {
     Try(new ChecksumCalculator().update(createEvent("sns_s3_invalid_json"), null))
     val outputMessages = outputQueueHelper.receive
     val inputMessages = inputQueueHelper.receive
@@ -61,14 +61,14 @@ class ChecksumCalculatorTest extends AnyFlatSpec with BeforeAndAfterAll with Bef
     inputMessages.size should equal(1)
   }
 
-  "The method" should "return the receipt handle for a successful message" in {
+  "The update method" should "return the receipt handle for a successful message" in {
     putFile("ten_bytes")
     val event = createEvent("sns_s3_event")
     val response = new ChecksumCalculator().update(event, null)
     response(0) should equal(receiptHandle(event.getRecords.get(0).getBody))
   }
 
-  "The method" should "throw an exception for a no key error" in {
+  "The update method" should "throw an exception for a no key error" in {
     val event = createEvent("sns_s3_no_key")
     val exception = intercept[RuntimeException] {
       new ChecksumCalculator().update(event, null)
@@ -76,7 +76,7 @@ class ChecksumCalculatorTest extends AnyFlatSpec with BeforeAndAfterAll with Bef
     exception.getMessage should equal("The resource you requested does not exist (Service: S3, Status Code: 404, Request ID: null, Extended Request ID: null)")
   }
 
-  "The method" should "calculate the correct checksum for a file with one chunk" in {
+  "The update method" should "calculate the correct checksum for a file with one chunk" in {
     putFile("ten_bytes")
     new ChecksumCalculator().update(createEvent("sns_s3_event"), null)
     val msgs = outputQueueHelper.receive
@@ -87,7 +87,7 @@ class ChecksumCalculatorTest extends AnyFlatSpec with BeforeAndAfterAll with Bef
     metadata.value should equal("9e994cad5c56b82e10bd9012e98992027631cd36daef4739613c5dd68b7d7f0e")
   }
 
-  "The method" should "calculate the correct checksum for a file with two chunks" in {
+  "The update method" should "calculate the correct checksum for a file with two chunks" in {
     putFile("more_than_one_meg")
     new ChecksumCalculator().update(createEvent("sns_s3_event_large_file"), null)
     val msgs = outputQueueHelper.receive

@@ -59,7 +59,7 @@ Zip the contents
 
 Upload to an S3 bucket
 
-`aws s3 cp function.zip s3://tdr-backend-checks-$STAGE/yara-av.zip`
+`aws s3 cp function.zip s3://tdr-backend-code-mgmt/yara-av.zip`
 
 Update the lambda function in the environment account. You will need credentials for whichever environment you're deploying to
 

@@ -1,4 +1,7 @@
 .idea
 antivirus/venv
 antivirus/output
+checksum/target
+checksum/project/target
+checksum/project/project
 __pycache__

@@ -1,3 +1,5 @@
+library("tdr-jenkinslib")
+
 pipeline {
     agent {
         label "master"
@@ -16,20 +18,10 @@ pipeline {
             }
             steps {
                 script {
-                    def accountNumber = getAccountNumberFromStage()
+                    def accountNumber = tdr.getAccountNumberFromStage()
                     sh "python3 /deploy_lambda_from_s3.py ${accountNumber} ${params.STAGE} tdr-checksum-${params.STAGE} tdr-backend-code-mgmt ${params.TO_DEPLOY}/checksum.jar"
                 }
             }
         }
     }
-}
-
-def getAccountNumberFromStage() {
-    def stageToAccountMap = [
-            "intg": env.INTG_ACCOUNT,
-            "staging": env.STAGING_ACCOUNT,
-            "prod": env.PROD_ACCOUNT
-    ]
-
-    return stageToAccountMap.get(params.STAGE)
 }

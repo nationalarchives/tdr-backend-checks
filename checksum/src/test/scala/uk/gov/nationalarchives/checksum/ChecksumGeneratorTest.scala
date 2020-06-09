@@ -18,7 +18,7 @@ class ChecksumGeneratorTest extends AnyFlatSpec with MockitoSugar with TableDriv
     )
 
   forAll(fileSizes) { fileSizeInMb => {
-    "The generate method" should s"calls the bucket client with the correct start and end values for file size $fileSizeInMb" in {
+    "The generate method" should s"call the bucket client with the correct start and end values for file size $fileSizeInMb" in {
       val checksumGenerator = ChecksumGenerator()
       val uploadBucketClient = mock[UploadBucketClient]
       val startCaptor: ArgumentCaptor[Long] = ArgumentCaptor.forClass(classOf[Long])

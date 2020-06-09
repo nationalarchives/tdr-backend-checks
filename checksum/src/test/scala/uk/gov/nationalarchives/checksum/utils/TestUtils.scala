@@ -82,6 +82,4 @@ object TestUtils {
 
   val inputQueueHelper = QueueHelper(inputQueueUrl)
   val outputQueueHelper = QueueHelper(outputQueueUrl)
-
-
 }

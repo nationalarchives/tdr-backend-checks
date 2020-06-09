@@ -36,6 +36,4 @@ class ChecksumGeneratorTest extends AnyFlatSpec with MockitoSugar with TableDriv
     }
   }
   }
-
-
 }

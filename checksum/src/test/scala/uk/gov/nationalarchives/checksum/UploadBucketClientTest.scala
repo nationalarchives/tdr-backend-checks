@@ -77,8 +77,5 @@ class UploadBucketClientTest extends AnyFlatSpec with MockitoSugar with TableDri
       objectRequest.key should equal(key)
     }
   }
-
   }
-
-
 }

@@ -53,7 +53,7 @@ def matcher_lambda_handler(event, lambda_context):
                           "datetime": time,
                           "fileId": key.split("/")[-1] }
                 outputs.append(output)
-                sqs_client.send_message(QueueUrl=os.environ["SQS_URL"], MessageBody=json.dumps(outputs))
+                sqs_client.send_message(QueueUrl=os.environ["SQS_URL"], MessageBody=json.dumps(output))
                 logger.info("Key %s processed", key)
 
         return outputs

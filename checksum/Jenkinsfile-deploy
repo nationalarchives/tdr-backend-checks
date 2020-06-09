@@ -24,4 +24,11 @@ pipeline {
             }
         }
     }
+    post {
+        success {
+            script {
+                tdr.runEndToEndTests(0, params.STAGE, BUILD_URL)
+            }
+        }
+    }
 }

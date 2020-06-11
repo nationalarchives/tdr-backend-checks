@@ -14,7 +14,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.language.postfixOps
 
-class ProcessorFunction[Input, Data, Variables](document: Document, variablesFn: Input => Variables)(implicit val excecutionContext: ExecutionContext, val decoder: Decoder[Input], val dataDecoder: Decoder[Data], val variablesEncoder: Encoder[Variables]) {
+class Processor[Input, Data, Variables](document: Document, variablesFn: Input => Variables)(implicit val excecutionContext: ExecutionContext, val decoder: Decoder[Input], val dataDecoder: Decoder[Data], val variablesEncoder: Encoder[Variables]) {
   case class InputWithReceiptHandle(input: Input, receiptHandle: String)
   val configFactory: Config = ConfigFactory.load
   val apiUpdate: ApiUpdate = ApiUpdate()

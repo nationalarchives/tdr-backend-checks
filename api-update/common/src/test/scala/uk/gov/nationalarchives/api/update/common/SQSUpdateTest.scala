@@ -10,7 +10,7 @@ import uk.gov.nationalarchives.api.update.common.utils.ExternalServicesTest
 class SQSUpdateTest extends ExternalServicesTest with MockitoSugar  {
   "The deleteMessage method" should "delete a message" in {
     val sqsClient = Mockito.mock(classOf[SqsClient])
-    val sqsUpdate = SQSUpdate(sqsClient)
+    val sqsUpdate = SQSUpdate()
     val queueUrl = "testqueue"
     val receiptHandle = "testreceipthandle"
     val captor: ArgumentCaptor[DeleteMessageRequest] = ArgumentCaptor.forClass(classOf[DeleteMessageRequest])

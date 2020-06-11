@@ -1,5 +1,10 @@
 package uk.gov.nationalarchives.api.update.common
 
+import java.net.URI
+
+import com.typesafe.config.ConfigFactory
+import software.amazon.awssdk.http.apache.ApacheHttpClient
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
 
@@ -13,5 +18,14 @@ class SQSUpdate(sqsClient: SqsClient) {
 }
 
 object SQSUpdate {
-  def apply(sqsClient: SqsClient): SQSUpdate = new SQSUpdate(sqsClient)
+  def apply(): SQSUpdate = {
+    val configFactory = ConfigFactory.load
+    val httpClient = ApacheHttpClient.builder.build
+    val sqsClient: SqsClient = SqsClient.builder()
+      .region(Region.EU_WEST_2)
+      .endpointOverride(new URI(configFactory.getString("sqs.endpoint")))
+      .httpClient(httpClient)
+      .build()
+    new SQSUpdate(sqsClient)
+  }
 }
